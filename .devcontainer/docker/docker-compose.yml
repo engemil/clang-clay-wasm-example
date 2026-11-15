@@ -1,0 +1,12 @@
+services:
+  example_service:
+    build:
+      context: .
+      dockerfile: Dockerfile # The path to our Dockerfile
+    command: /bin/bash
+    tty: true
+    privileged: true
+    ports:
+      - 8080:8080 # For web servers
+    volumes:
+      - ../../:/workspace:cached # To be able to spin up from devcontainers

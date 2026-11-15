@@ -1,0 +1,17 @@
+services:
+  example_service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: /bin/bash
+    tty: true
+    stdin_open: true
+    # Fixed image IDs; keep-id maps the invoking host user to them, even
+    # when that user's host UID/GID are not 1000. Use rootless Podman.
+    user: "1000:1000"
+    userns_mode: "keep-id:uid=1000,gid=1000"
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      # Shared SELinux label for the checkout; no recursive ownership changes.
+      - "../../:/workspace:z"
