@@ -6,9 +6,14 @@
     "workspaceFolder": "/workspace",
     "remoteUser": "engemil",
     "updateRemoteUserUID": false,
+    "postStartCommand": ["sh", "-c", "git -C /workspace submodule update --init --recursive && bear --output /workspace/compile_commands.json -- make -C /workspace/src -B"],
     "customizations": {
         "vscode": {
             "extensions": [
+                "TestMate.vscode-catch2-test-adapter",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "EditorConfig.EditorConfig",
+                "JacquesLucke.gcov-viewer",
                 "ritwickdey.liveserver"
             ],
             "settings": {

@@ -6,17 +6,47 @@ FROM debian:13.7@sha256:9c6e381421d0f48d1b8133e573f33c185ee16cbf505eda9c4a8a4791
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and Install dependencies
+# Update and basic dependencies
 RUN apt-get update
 RUN apt-get install locales -y
 RUN apt-get install sudo -y
+RUN apt-get install git -y
+
+# Install C/C++ build tools and development tools
 RUN apt-get install build-essential -y
 RUN apt-get install pkg-config -y
+RUN apt-get install clang-tools -y
 RUN apt-get install clang lld -y
+# Editor intelligence and code navigation tools
+RUN apt-get install clangd -y
+RUN apt-get install bear -y
+# Formatting tools
+RUN apt-get install clang-format -y
+RUN apt-get install editorconfig -y
+# Debugging tools
+RUN apt-get install gdb -y
+# static analysis tools
+RUN apt-get install cppcheck -y
+RUN apt-get install clang-tidy -y
+RUN apt-get install clang-tools -y
+# Dynamic analysis tools
+RUN apt-get install valgrind -y
+RUN apt-get install libclang-rt-dev -y
+# Testing and coverage tools
+RUN apt-get install libgetest-dev -y
+RUN apt-get install libgmock-dev -y
+RUN apt-get install lcov -y
+
+# Application related dependencies
 # lightweight C static server for `make serve` (.wasm MIME via /etc/mime.types)
 RUN apt-get install webfs media-types -y
-RUN apt-get install git -y
+
+# Extra tools for development
 RUN apt-get install curl -y
+RUN apt-get install ca-certificates -y
+
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*
 
 # Generate UTF-8 locale so host LANG/LC_* env vars (forwarded by VS Code) resolve
 RUN sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
