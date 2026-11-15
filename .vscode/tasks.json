@@ -4,8 +4,8 @@
         {
             "label": "Build",
             "type": "process",
-            "command": "make",
-            "args": ["-C", "src"],
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "build"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -13,13 +13,18 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$gcc"]
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+                }
+            ]
         },
         {
             "label": "Clean",
             "type": "process",
-            "command": "make",
-            "args": ["-C", "src", "clean"],
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "clean"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -27,13 +32,18 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "problemMatcher": ["$gcc"]
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+                }
+            ]
         },
         {
             "label": "Run (Serve)",
             "type": "process",
-            "command": "make",
-            "args": ["-C", "src", "serve"],
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "serve"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -41,25 +51,27 @@
                 "kind": "test",
                 "isDefault": true
             },
-            "problemMatcher": ["$gcc"]
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+                }
+            ]
         },
         {
             "label": "Generate compilation database",
             "type": "process",
-            "command": "bear",
-            "args": [
-                "--output",
-                "compile_commands.json",
-                "--",
-                "make",
-                "-C",
-                "src",
-                "-B"
-            ],
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "compdb"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "problemMatcher": ["$gcc"]
+            "problemMatcher": [
+                {
+                    "base": "$gcc",
+                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+                }
+            ]
         }
     ]
 }

@@ -5,7 +5,7 @@ example project (acting as a template)
 
 ## Prerequisites
 
-> Note that this setup assumes you are using Debian/Ubuntu
+> Note that this setup assumes you are using Debian/Ubuntu and will use a container engine and VS Code with dev container. However, it is sat up in a way to be possible to run from terminal with sh-script(s).
 
 - Container Engine (required only for dev-container development)
     - Docker, preview the installation script (`--dry-run` does not install Docker):
@@ -29,25 +29,27 @@ example project (acting as a template)
             - NB! Make sure Dev containers plugin is pointing to Podman, if you are not using Docker. Check `$HOME/.config/Code/User/settings.json` (for Linux).
 
 
-## Environment Setup
+> Run commands from entry point (e.g. `sh scripts/dev.sh <command>`). From another directory, use an absolute paths.
 
-> NB! Run commands from the repository root unless stated otherwise.
+
+## Environment Setup
 
 ### Dev container
 
 In VS Code, run **Dev Containers: Reopen in Container** and select either the Docker or Podman configuration.
 
-The container is configured to do everything needed to prepare the project. 
+The container is configured to do everything needed to prepare the project.
+
+You can skip **Local setup without a dev container** from here.
+
 
 ### Local setup without a dev container
 
-Initialize the Clay dependency before building or opening the dev container:
-
-```sh
-git submodule update --init --recursive
-```
+If you prepare to not run in container, this is the "manual" approach.
 
 Install the development dependencies:
+
+(TODO: also go over to see if we are installing too much uncessary or double installing in Dockerfile(s))
 
 ```sh
 sudo apt-get update
@@ -59,53 +61,73 @@ sudo apt-get install -y \
     webfs media-types curl ca-certificates
 ```
 
-And if not already done (in prerequisits), install the recommended VS Code extensions.
+Prepare the project after installing the dependencies:
+
+```sh
+sh scripts/dev.sh prepare
+```
+
+This initializes the Clay submodule and generates `compile_commands.json`.
 
 
 #### Generate the compilation database
 
-Run:
+No need to run this during the setup `prepare` is sufficient.
+
+> NB! Rerun `compdb` after changing compiler flags, include paths, or compiled source files. Ordinary source edits do not require regeneration.
 
 ```sh
-bear --output compile_commands.json -- make -C src -B
+sh scripts/dev.sh compdb
 ```
-
-> NB! Remember to rerun the Bear command after changing compiler flags, include paths, or compiled source files. Ordinary source edits do not require regeneration.
 
 
 ## Build & Run
 
-Run these commands from the repository root.
-
 Build:
 ```sh
-make -C src
+sh scripts/dev.sh build
 ```
 
 Run (start webfsd):
 ```sh
-make -C src serve
+sh scripts/dev.sh serve
 ```
 
 Then open a web browser and check `http://127.0.0.1:8080/`
 
+The server stays in the foreground; use Ctrl+C to stop it.
+
+The optional **Live Server** extension is a separate server for `src/build/`, not a caller of `dev.sh`; use it or the script's webfsd server, not both on port 8080.
 
 ## Stop & Clean
 
 Stop webfsd:
 ```sh
-make -C src stop
+sh scripts/dev.sh stop
 ```
 
 Clean build artifacts:
 ```sh
-make -C src clean
+sh scripts/dev.sh clean
 ```
+
+## Command reference
+
+These are equivalent ways to run the same workflows.
+
+| Workflow | VS Code / Dev Container entrypoint | Portable script command | Equivalent underlying command |
+| --- | --- | --- | --- |
+| Prepare dependencies and compilation database | Automatic `postStartCommand` on every dev container start, for both Docker and Podman | `sh scripts/dev.sh prepare` | `git submodule update --init --recursive && bear --output compile_commands.json -- make -C src -B` |
+| Build | **Tasks: Run Build Task** → **Build** (default build task) | `sh scripts/dev.sh build` | `make -C src` |
+| Clean | **Tasks: Run Task** → **Clean** | `sh scripts/dev.sh clean` | `make -C src clean` |
+| Build and serve | **Tasks: Run Task** → **Run (Serve)**; also the default task for **Tasks: Run Test Task** | `sh scripts/dev.sh serve` | `make -C src serve` |
+| Regenerate compilation database | **Tasks: Run Task** → **Generate compilation database** | `sh scripts/dev.sh compdb` | `bear --output compile_commands.json -- make -C src -B` |
+| Stop the server | No dedicated task; run the script in the integrated terminal, or use Ctrl+C in the serving terminal | `sh scripts/dev.sh stop` | `make -C src stop` |
+| Show command help | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh help` | Prints the script's usage information; no build command |
 
 ## Development Tools Overview
 
 (TODO: Improve!)
-(TODO: also go over to see if we are installing too much uncessary or double installing in Dockerfile(s))
 
 | Tools | Purpose |
 | --- | --- |
@@ -119,7 +141,7 @@ make -C src clean
 | Google Test and Google Mock | Provide C++ testing and mocking libraries for separately configured tests. |
 | C++ TestMate | Discover and run supported C++ test executables in VS Code once those executables are built and configured. |
 | LCOV and gcov Viewer | Collect/report coverage data and display gcov-format results in VS Code, respectively. An instrumented build and coverage-generation commands are required. |
-| webfs and media-types | Serve the built application with `make -C src serve`, including the WebAssembly MIME type. |
+| webfs and media-types | Serve the built application with `sh scripts/dev.sh serve`, including the WebAssembly MIME type. |
 | Live Server | Provide an optional VS Code web server, configured to serve `src/build/`. Use it or webfs, not both on port 8080. |
 
 The current Makefile builds and serves the WebAssembly application. It does not

@@ -5,7 +5,7 @@
     "shutdownAction": "none",
     "workspaceFolder": "/workspace",
     "remoteUser": "engemil",
-    "postStartCommand": ["sh", "-c", "git -C /workspace submodule update --init --recursive && bear --output /workspace/compile_commands.json -- make -C /workspace/src -B"],
+    "postStartCommand": ["sh", "${containerWorkspaceFolder}/scripts/dev.sh", "prepare"],
     "customizations": {
         "vscode": {
             "extensions": [

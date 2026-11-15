@@ -51,5 +51,5 @@ stop:
 	fi
 	@rm -f $(BUILD)/webfsd.pid
 
-clean: stop
+clean:
 	rm -rf $(BUILD)
