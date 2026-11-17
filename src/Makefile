@@ -1,6 +1,9 @@
 # pure_c_example_project — Clay web UI, compiled to freestanding wasm32.
 #
 #   make        build build/index.wasm + build/index.html
+#   make rebuild clean and build again
+#   make validate validate the built WebAssembly module with WABT
+#   make inspect inspect the built WebAssembly module with WABT
 #   make serve  serve build/ on http://localhost:8080
 #   make stop   stop the webfsd started by `make serve`
 #   make clean  remove build artifacts
@@ -10,16 +13,27 @@
 CC      := clang
 BUILD   := build
 PID     := $(shell cat $(BUILD)/webfsd.pid 2>/dev/null)
-CFLAGS  := -Os -Wall -Wextra -DCLAY_WASM -mbulk-memory \
+CFLAGS  := -std=c17 -ffreestanding \
+           -Os -Wall -Wextra -DCLAY_WASM -mbulk-memory \
            --target=wasm32 -nostdlib \
            -Wl,--strip-all -Wl,--export-dynamic -Wl,--no-entry \
            -Wl,--export=__heap_base -Wl,--initial-memory=6553600
 
-.PHONY: all serve stop clean
+.PHONY: all rebuild validate inspect serve stop clean
 
 all: $(BUILD)/index.wasm $(BUILD)/index.html
 
-$(BUILD)/index.wasm: main.c clay/clay.h | $(BUILD)
+rebuild:
+	$(MAKE) clean
+	$(MAKE) all
+
+validate: $(BUILD)/index.wasm
+	wasm-validate $<
+
+inspect: $(BUILD)/index.wasm
+	wasm-objdump -x $<
+
+$(BUILD)/index.wasm: main.c clay/clay.h Makefile | $(BUILD)
 	$(CC) $(CFLAGS) -Iclay -o $@ main.c
 $(BUILD)/index.html: web/index.html | $(BUILD)
 	cp $< $@

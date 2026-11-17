@@ -17,6 +17,7 @@ RUN apt-get install build-essential -y
 RUN apt-get install pkg-config -y
 RUN apt-get install clang-tools -y
 RUN apt-get install clang lld -y
+RUN apt-get install wabt -y
 # Editor intelligence and code navigation tools
 RUN apt-get install clangd -y
 RUN apt-get install bear -y
@@ -33,7 +34,7 @@ RUN apt-get install clang-tools -y
 RUN apt-get install valgrind -y
 RUN apt-get install libclang-rt-dev -y
 # Testing and coverage tools
-RUN apt-get install libgetest-dev -y
+RUN apt-get install libgtest-dev -y
 RUN apt-get install libgmock-dev -y
 RUN apt-get install lcov -y
 

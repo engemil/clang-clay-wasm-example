@@ -18,6 +18,7 @@ RUN apt-get install build-essential -y
 RUN apt-get install pkg-config -y
 RUN apt-get install clang-tools -y
 RUN apt-get install clang lld -y
+RUN apt-get install wabt -y
 # Editor intelligence and code navigation tools
 RUN apt-get install clangd -y
 RUN apt-get install bear -y
@@ -34,7 +35,7 @@ RUN apt-get install clang-tools -y
 RUN apt-get install valgrind -y
 RUN apt-get install libclang-rt-dev -y
 # Testing and coverage tools
-RUN apt-get install libgetest-dev -y
+RUN apt-get install libgtest-dev -y
 RUN apt-get install libgmock-dev -y
 RUN apt-get install lcov -y
 
@@ -63,8 +64,7 @@ ARG USERNAME=engemil
 RUN groupadd --gid 1000 "${USERNAME}" \
     && useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash "${USERNAME}" \
     && printf '%s ALL=(ALL) NOPASSWD:ALL\n' "${USERNAME}" > /etc/sudoers.d/devcontainer \
-    && chmod 0440 /etc/sudoers.d/devcontainer \
-    && install -d -o "${USERNAME}" -g "${USERNAME}" /workspace
+    && chmod 0440 /etc/sudoers.d/devcontainer
 
 # Switch to the new user
 USER $USERNAME

@@ -9,11 +9,12 @@ cd "$root"
 # usage prints the usage message to stdout.
 usage() {
     cat <<'EOF'
-Usage: sh scripts/dev.sh {prepare|build|clean|serve|stop|compdb|help}
+Usage: sh scripts/dev.sh {prepare|build|rebuild|clean|serve|stop|compdb|help}
 
 Commands:
     prepare  Initialize submodules, then regenerate the compilation database.
     build    Build the WebAssembly application.
+    rebuild  Remove build artifacts, then build the WebAssembly application.
     clean    Remove build artifacts.
     serve    Build and run the server in the foreground (Ctrl+C to stop).
     stop     Stop the server using the Makefile's stop target.
@@ -45,6 +46,9 @@ case "${1:-help}" in
     build)
         # Build the WebAssembly application.
         exec make -C "$root/src"
+        ;;
+    rebuild)
+        exec make -C "$root/src" rebuild
         ;;
     serve)
         # Build and run the server in the foreground.
