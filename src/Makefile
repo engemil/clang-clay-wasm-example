@@ -1,6 +1,8 @@
 # pure_c_example_project — Clay web UI, compiled to freestanding wasm32.
 #
 #   make        build build/index.wasm + build/index.html
+#   make prepare initialize submodules and regenerate the compilation database
+#   make compdb regenerate the compilation database through a forced build
 #   make rebuild clean and build again
 #   make validate validate the built WebAssembly module with WABT
 #   make inspect inspect the built WebAssembly module with WABT
@@ -11,6 +13,7 @@
 # Build depends on clay submodule: no emscripten, no libc, just clang + wasm-ld.
 
 CC      := clang
+ROOT    := $(abspath ..)
 BUILD   := build
 PID     := $(shell cat $(BUILD)/webfsd.pid 2>/dev/null)
 CFLAGS  := -std=c17 -ffreestanding \
@@ -19,9 +22,16 @@ CFLAGS  := -std=c17 -ffreestanding \
            -Wl,--strip-all -Wl,--export-dynamic -Wl,--no-entry \
            -Wl,--export=__heap_base -Wl,--initial-memory=6553600
 
-.PHONY: all rebuild validate inspect serve stop clean
+.PHONY: all prepare compdb rebuild validate inspect serve stop clean
 
 all: $(BUILD)/index.wasm $(BUILD)/index.html
+
+prepare:
+	git -C "$(ROOT)" submodule update --init --recursive
+	$(MAKE) compdb
+
+compdb:
+	bear --force-wrapper --output "$(ROOT)/compile_commands.json" -- $(MAKE) -B all
 
 rebuild:
 	$(MAKE) clean

@@ -26,22 +26,10 @@ Server URL: http://127.0.0.1:8080/ (available after the server starts).
 EOF
 }
 
-# compdb generates the compilation database using Bear.
-compdb() {
-    exec bear --output "$root/compile_commands.json" -- \
-        make -C "$root/src" -B
-}
-
 # Main script entry point.
 case "${1:-help}" in
-    prepare)
-        # Initialize submodules and regenerate the compilation database.
-        git submodule update --init --recursive
-        compdb
-        ;;
-    compdb)
-        # Regenerate the compilation database.
-        compdb
+    prepare|compdb)
+        exec make -C "$root/src" "$1"
         ;;
     build)
         # Build the WebAssembly application.

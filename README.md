@@ -81,6 +81,8 @@ No need to run this during the setup `prepare` is sufficient.
 sh scripts/dev.sh compdb
 ```
 
+Bear uses wrapper mode to capture the Clang driver without also recording its internal `-cc1` invocation. The database is written to the repository root. (`compile_commands.json`).
+
 
 ## Build & Run
 
@@ -140,12 +142,12 @@ These are equivalent ways to run the same workflows.
 
 | Workflow | VS Code / Dev Container entrypoint | Portable script command | Equivalent underlying command |
 | --- | --- | --- | --- |
-| Prepare dependencies and compilation database | Automatic `postStartCommand` on every dev container start, for both Docker and Podman | `sh scripts/dev.sh prepare` | `git submodule update --init --recursive && bear --output compile_commands.json -- make -C src -B` |
+| Prepare dependencies and compilation database | Automatic `postStartCommand` on every dev container start, for both Docker and Podman | `sh scripts/dev.sh prepare` | `make -C src prepare` (initialize submodules, then run `compdb`) |
 | Build | **Tasks: Run Build Task** → **Build** (default build task) | `sh scripts/dev.sh build` | `make -C src` |
 | Rebuild | **Tasks: Run Task** → **Rebuild** | `sh scripts/dev.sh rebuild` | `make -C src rebuild` (ordered clean, then build) |
 | Clean | **Tasks: Run Task** → **Clean** | `sh scripts/dev.sh clean` | `make -C src clean` |
 | Build and serve | **Tasks: Run Task** → **Run (Serve)**; also the default task for **Tasks: Run Test Task** | `sh scripts/dev.sh serve` | `make -C src serve` |
-| Regenerate compilation database | **Tasks: Run Task** → **Generate compilation database** | `sh scripts/dev.sh compdb` | `bear --output compile_commands.json -- make -C src -B` |
+| Regenerate compilation database | **Tasks: Run Task** → **Generate compilation database** | `sh scripts/dev.sh compdb` | `make -C src compdb` |
 | Stop the server | No dedicated task; run the script in the integrated terminal, or use Ctrl+C in the serving terminal | `sh scripts/dev.sh stop` | `make -C src stop` |
 | Show command help | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh help` | Prints the script's usage information; no build command |
 | Validate WebAssembly | No dedicated task; run Make in the integrated terminal | — | `make -C src validate` |
