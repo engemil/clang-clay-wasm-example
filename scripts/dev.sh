@@ -9,16 +9,17 @@ cd "$root"
 # usage prints the usage message to stdout.
 usage() {
     cat <<'EOF'
-Usage: sh scripts/dev.sh {prepare|build|rebuild|clean|serve|stop|compdb|help}
+Usage: sh scripts/dev.sh {build|rebuild|serve} [release|debug]
+       sh scripts/dev.sh {prepare|clean|stop|compdb|help}
 
 Commands:
     prepare  Initialize submodules, then regenerate the compilation database.
-    build    Build the WebAssembly application.
-    rebuild  Remove build artifacts, then build the WebAssembly application.
-    clean    Remove build artifacts.
-    serve    Build and run the server in the foreground (Ctrl+C to stop).
+    build    Build the WebAssembly application (release by default).
+    rebuild  Force a rebuild of only the selected mode (release by default).
+    clean    Remove both build outputs.
+    serve    Build and serve the selected mode (release by default; Ctrl+C to stop).
     stop     Stop the server using the Makefile's stop target.
-    compdb   Regenerate compile_commands.json through a forced build.
+    compdb   Regenerate compile_commands.json through a forced release build.
     help     Show this help.
 
 Install the development dependencies listed in README.md before preparing.
@@ -31,17 +32,28 @@ case "${1:-help}" in
     prepare|compdb)
         exec make -C "$root/src" "$1"
         ;;
-    build)
-        # Build the WebAssembly application.
-        exec make -C "$root/src"
-        ;;
-    rebuild)
-        exec make -C "$root/src" rebuild
-        ;;
-    serve)
-        # Build and run the server in the foreground.
-        printf '%s\n' 'Server URL: http://127.0.0.1:8080/ (available after the server starts).'
-        exec make -C "$root/src" serve
+    build|rebuild|serve)
+        mode=${2-release}
+        case "$mode" in
+            release|debug) ;;
+            *)
+                printf 'Unknown build mode: %s\n' "$mode" >&2
+                usage >&2
+                exit 2
+                ;;
+        esac
+        if [ "$#" -gt 2 ]; then
+            usage >&2
+            exit 2
+        fi
+        case "$1" in
+            build)   exec make -C "$root/src" "$mode" ;;
+            rebuild) exec make -C "$root/src" "rebuild-$mode" ;;
+            serve)
+                printf '%s\n' 'Server URL: http://127.0.0.1:8080/ (available after the server starts).'
+                exec make -C "$root/src" serve "MODE=$mode"
+                ;;
+        esac
         ;;
     clean|stop)
         # Stop the server and remove build artifacts.

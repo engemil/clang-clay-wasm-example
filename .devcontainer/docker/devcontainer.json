@@ -17,7 +17,7 @@
             ],
             "settings": {
                 "liveServer.settings.port": 8080,
-                "liveServer.settings.root": "/src/build"
+                "liveServer.settings.root": "/src/build/release"
             }
         }
     }

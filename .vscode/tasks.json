@@ -2,10 +2,10 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build",
+            "label": "Build (Release)",
             "type": "process",
             "command": "sh",
-            "args": ["${workspaceFolder}/scripts/dev.sh", "build"],
+            "args": ["${workspaceFolder}/scripts/dev.sh", "build", "release"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -13,18 +13,24 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
                 }
-            ]
+            }
         },
         {
-            "label": "Rebuild",
+            "label": "Build (Debug)",
             "type": "process",
             "command": "sh",
-            "args": ["${workspaceFolder}/scripts/dev.sh", "rebuild"],
+            "args": ["${workspaceFolder}/scripts/dev.sh", "build", "debug"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -32,12 +38,68 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
                 }
-            ]
+            }
+        },
+        {
+            "label": "Rebuild (Release)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "rebuild", "release"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
+        },
+        {
+            "label": "Rebuild (Debug)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "rebuild", "debug"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            }
         },
         {
             "label": "Clean",
@@ -51,12 +113,18 @@
                 "kind": "build",
                 "isDefault": false
             },
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
                 }
-            ]
+            }
         },
         {
             "label": "Run (Serve)",
@@ -70,12 +138,18 @@
                 "kind": "test",
                 "isDefault": true
             },
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
                 }
-            ]
+            }
         },
         {
             "label": "Generate compilation database",
@@ -85,12 +159,18 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "problemMatcher": [
-                {
-                    "base": "$gcc",
-                    "fileLocation": ["relative", "${workspaceFolder}/src"]
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
                 }
-            ]
+            }
         }
     ]
 }
