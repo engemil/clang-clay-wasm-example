@@ -14,7 +14,8 @@
                 "llvm-vs-code-extensions.vscode-clangd",
                 "EditorConfig.EditorConfig",
                 "JacquesLucke.gcov-viewer",
-                "ritwickdey.liveserver"
+                "ritwickdey.liveserver",
+                "ms-vscode.wasm-dwarf-debugging"
             ],
             "settings": {
                 "liveServer.settings.port": 8080,

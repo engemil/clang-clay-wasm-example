@@ -152,6 +152,49 @@
             }
         },
         {
+            "label": "Prepare WebAssembly Debug",
+            "dependsOrder": "sequence",
+            "dependsOn": ["Rebuild (Debug)", "Serve (Debug)"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Serve (Debug)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "serve", "debug"],
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "SERVE_WAIT": "1"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "clang",
+                "fileLocation": ["relative", "${workspaceFolder}/src"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "^DEV_SERVER_STARTING$",
+                    "endsPattern": "^DEV_SERVER_READY$"
+                }
+            }
+        },
+        {
+            "label": "Stop (Debug)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/wait-for-webfsd.sh", "stop"],
+            "problemMatcher": []
+        },
+        {
             "label": "Generate compilation database",
             "type": "process",
             "command": "sh",

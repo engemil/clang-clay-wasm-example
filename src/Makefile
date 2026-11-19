@@ -77,13 +77,18 @@ $(RELEASE_BUILD) $(DEBUG_BUILD):
 	mkdir -p $@
 
 # Lightweight C static server (webfsd); .wasm served as application/wasm via /etc/mime.types.
+WEBFSD            := webfsd -F -p 8080 -f index.html
 SERVE_DIR_release := $(RELEASE_BUILD)
 SERVE_DIR_debug   := $(DEBUG_BUILD)
 SERVE_DIR         := $(SERVE_DIR_$(MODE))
 
 serve: $(if $(SERVE_DIR),$(MODE))
 	$(if $(SERVE_DIR),,$(error Unknown serve mode '$(MODE)'; expected release or debug))
-	cd "$(SERVE_DIR)" && rm -f "$(PID_FILE)" && exec webfsd -F -p 8080 -f index.html -k "$(PID_FILE)"
+ifeq ($(SERVE_WAIT),1)
+	cd "$(SERVE_DIR)" && exec sh "$(ROOT)/scripts/wait-for-webfsd.sh" serve $(WEBFSD) -4
+else
+	cd "$(SERVE_DIR)" && rm -f "$(PID_FILE)" && exec $(WEBFSD) -k "$(PID_FILE)"
+endif
 
 # Stops the webfsd started by make serve.
 stop:

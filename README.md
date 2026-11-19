@@ -30,7 +30,7 @@ example project (acting as a template)
         - Live Server https://marketplace.visualstudio.com/items?itemName=ritwickdey.liveserver
         - Dev Containers https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
             - NB! Make sure Dev containers plugin is pointing to Podman, if you are not using Docker. Check `$HOME/.config/Code/User/settings.json` (for Linux).
-
+- Chromium: `sudo apt install chromium` (application specific, for debugging)
 
 > Run commands from entry point (e.g. `sh scripts/dev.sh <command>`). From another directory, use an absolute paths.
 
@@ -61,7 +61,7 @@ sudo apt-get install -y \
     clang-tools clang lld clangd bear clang-format editorconfig wabt \
     gdb cppcheck clang-tidy valgrind libclang-rt-dev \
     libgtest-dev libgmock-dev lcov \
-    webfs media-types curl ca-certificates
+    webfs media-types curl ca-certificates util-linux
 ```
 
 Prepare the project after installing the dependencies:
@@ -131,10 +131,6 @@ Then open a web browser and check `http://127.0.0.1:8080/`
 
 The server stays in the foreground; use **Ctrl+C** to stop it before switching modes.
 
-(TODO: Figure out if this info is needded: For C source-level debugging, serve the debug build and use browser DevTools with WebAssembly DWARF support. )
-
-(TODO: Move server lifecycle management into one helper used by serve [release|debug] and stop, so duplicate starts fail safely, stop only targets the server it owns, and clean leaves running sessions alone. Make VS Code wait until the owned server returns HTTP 200 with the selected build’s index.html before starting dependent tasks. Test port conflicts, startup timeouts, interrupted shutdown, stale ownership, and repeated stop in a disposable Linux container. )
-
 (TODO: Test Live Server!)
 
 The optional **Live Server** extension is a separate server for `src/build/release/`, not a caller of `dev.sh`. Use it or the script's webfsd server, not both on port 8080.
@@ -152,6 +148,14 @@ Clean build artifacts:
 ```sh
 sh scripts/dev.sh clean
 ```
+
+## Debug (in VS Code)
+
+> Before continuing stop any manually started server or Live Server using port 8080
+
+In **Run and Debug**, select **Debug WebAssembly (Chrome)** and press **F5**
+
+You will have a debug session with Chrome/Chromium.
 
 ## Command reference
 

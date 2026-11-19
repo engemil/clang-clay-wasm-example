@@ -44,7 +44,7 @@ RUN apt-get install lcov -y
 RUN apt-get install webfs media-types -y
 
 # Extra tools for development
-RUN apt-get install curl -y
+RUN apt-get install curl util-linux -y
 RUN apt-get install ca-certificates -y
 
 # Clean up

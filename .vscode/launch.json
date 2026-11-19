@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug WebAssembly (Chrome)",
+            "type": "chrome",
+            "request": "launch",
+            "preLaunchTask": "Prepare WebAssembly Debug",
+            "postDebugTask": "Stop (Debug)",
+            "url": "http://127.0.0.1:8080/",
+            "webRoot": "${workspaceFolder}/src/build/debug",
+            "browserLaunchLocation": "ui",
+            "enableDWARF": true
+        }
+    ]
+}
