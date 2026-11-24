@@ -6,7 +6,6 @@ FROM docker.io/library/debian:13.7@sha256:9c6e381421d0f48d1b8133e573f33c185ee16c
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
-
 # Update and basic dependencies
 RUN apt-get update
 RUN apt-get install locales -y
@@ -14,9 +13,9 @@ RUN apt-get install sudo -y
 RUN apt-get install git -y
 
 # Install C/C++ build tools and development tools
-RUN apt-get install build-essential -y
+#RUN apt-get install build-essential -y
+RUN apt-get install make -y
 RUN apt-get install pkg-config -y
-RUN apt-get install clang-tools -y
 RUN apt-get install clang lld llvm -y
 RUN apt-get install wabt -y
 # Editor intelligence and code navigation tools
@@ -30,7 +29,6 @@ RUN apt-get install gdb -y
 # static analysis tools
 RUN apt-get install cppcheck -y
 RUN apt-get install clang-tidy -y
-RUN apt-get install clang-tools -y
 # Dynamic analysis tools
 RUN apt-get install valgrind -y
 RUN apt-get install libclang-rt-dev -y

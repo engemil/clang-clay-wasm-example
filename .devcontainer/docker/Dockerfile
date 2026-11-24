@@ -13,9 +13,9 @@ RUN apt-get install sudo -y
 RUN apt-get install git -y
 
 # Install C/C++ build tools and development tools
-RUN apt-get install build-essential -y
+#RUN apt-get install build-essential -y
+RUN apt-get install make -y
 RUN apt-get install pkg-config -y
-RUN apt-get install clang-tools -y
 RUN apt-get install clang lld llvm -y
 RUN apt-get install wabt -y
 # Editor intelligence and code navigation tools
@@ -29,7 +29,6 @@ RUN apt-get install gdb -y
 # static analysis tools
 RUN apt-get install cppcheck -y
 RUN apt-get install clang-tidy -y
-RUN apt-get install clang-tools -y
 # Dynamic analysis tools
 RUN apt-get install valgrind -y
 RUN apt-get install libclang-rt-dev -y

@@ -79,7 +79,7 @@ coverage: $(COVERAGE_BUILD)/counter_test
 	mv "$(COVERAGE_BUILD)/lcov.info.tmp" "$(COVERAGE_BUILD)/lcov.info"
 	genhtml --branch-coverage --output-directory "$(COVERAGE_BUILD)/html" "$(COVERAGE_BUILD)/lcov.info"
 
-$(TEST_BUILD)/counter_test.o: ../tests/counter_test.c counter.h Makefile | $(TEST_BUILD)
+$(TEST_BUILD)/counter_test.o: ../tests/unit_test/counter_test.c counter.h Makefile | $(TEST_BUILD)
 	$(CC) $(TEST_CFLAGS) -I. -c -o $@ $<
 
 $(TEST_BUILD)/counter_test: counter.c $(TEST_BUILD)/counter_test.o counter.h Makefile

@@ -20,7 +20,7 @@ example project (acting as a template)
         ```sh
         sudo apt update && sudo apt install -y podman
         ```
-- VS Code, go to https://code.visualstudio.com/docs/setup/linux and follow the instructions (Linux specific).
+- VS Code, go to `https://code.visualstudio.com/docs/setup/linux` and follow the instructions (Linux specific).
     - VS Code Extensions (already included inside the dev container):
         <!-- - C/C++ `https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools` -->
         - clangd `https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd`
@@ -52,16 +52,14 @@ If you prepare to not run in container, this is the "manual" approach.
 
 Install the development dependencies:
 
-(TODO: also go over to see if we are installing too much uncessary or double installing in Dockerfile(s))
-
 ```sh
 sudo apt-get update
 sudo apt-get install -y \
-    locales sudo git build-essential pkg-config \
-    clang-tools clang lld llvm clangd bear clang-format editorconfig wabt \
+    locales sudo git make pkg-config \
+    clang lld llvm wabt clangd bear clang-format editorconfig \
     gdb cppcheck clang-tidy valgrind libclang-rt-dev \
     libgtest-dev libgmock-dev lcov \
-    webfs media-types curl ca-certificates util-linux
+    webfs media-types curl util-linux ca-certificates
 ```
 
 Prepare the project after installing the dependencies:
