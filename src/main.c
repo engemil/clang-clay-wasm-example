@@ -13,6 +13,7 @@
 
 #define CLAY_IMPLEMENTATION
 #include "clay.h"
+#include "counter.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,7 +22,7 @@ static const Clay_Color COLOR_TEXT        = {30, 30, 30, 255};
 static const Clay_Color COLOR_BUTTON      = {50, 50, 50, 255};
 static const Clay_Color COLOR_BUTTON_TEXT = {255, 255, 255, 255};
 
-static uint32_t clickCount = 0;
+static Counter counter;
 
 // --- tiny u32 -> decimal formatter (no sprintf in -nostdlib wasm) -----------
 static Clay_String U32ToString(uint32_t value, char buffer[12]) {
@@ -50,18 +51,13 @@ void UpdateDrawFrame(
     Clay_SetPointerState((Clay_Vector2) {mousePositionX, mousePositionY}, isMouseDown || isTouchDown);
     Clay_UpdateScrollContainers(true, (Clay_Vector2) {mouseWheelX, mouseWheelY}, deltaTime);
 
-    // Click counter: edge-triggered so holding the button counts once.
-    // (isMouseDown is only true for a single frame, but isTouchDown persists.)
-    static bool counterDownPrevious = false;
-    bool counterDown = (isMouseDown || isTouchDown) && Clay_PointerOver(CLAY_ID("CounterButton"));
-    if (counterDown && !counterDownPrevious) {
-        clickCount++;
-    }
-    counterDownPrevious = counterDown;
+    // Mouse presses last one frame, but touch presses can span multiple frames.
+    bool pressed = (isMouseDown || isTouchDown) && Clay_PointerOver(CLAY_ID("CounterButton"));
+    Counter_Update(&counter, pressed);
 
     // The browser reads this text from the render commands after this call returns.
     static char countBuffer[12];
-    Clay_String countText = U32ToString(clickCount, countBuffer);
+    Clay_String countText = U32ToString(counter.value, countBuffer);
 
     Clay_BeginLayout();
     CLAY({ .id = CLAY_ID("Page"),

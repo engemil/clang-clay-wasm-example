@@ -10,13 +10,15 @@ cd "$root"
 usage() {
     cat <<'EOF'
 Usage: sh scripts/dev.sh {build|rebuild|serve} [release|debug]
-       sh scripts/dev.sh {prepare|clean|stop|compdb|help}
+       sh scripts/dev.sh {prepare|test|coverage|clean|stop|compdb|help}
 
 Commands:
     prepare  Initialize submodules, then regenerate the compilation database.
     build    Build the WebAssembly application (release by default).
     rebuild  Force a rebuild of only the selected mode (release by default).
-    clean    Remove both build outputs.
+    test     Run the native C tests.
+    coverage Run the native C tests with coverage and generate LCOV and HTML reports.
+    clean    Remove all build outputs.
     serve    Build and serve the selected mode (release by default; Ctrl+C to stop).
     stop     Stop the server using the Makefile's stop target.
     compdb   Regenerate compile_commands.json through a forced release build.
@@ -29,7 +31,7 @@ EOF
 
 # Main script entry point.
 case "${1:-help}" in
-    prepare|compdb)
+    prepare|compdb|test|coverage)
         exec make -C "$root/src" "$1"
         ;;
     build|rebuild|serve)

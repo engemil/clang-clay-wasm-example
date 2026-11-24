@@ -16,7 +16,7 @@ RUN apt-get install git -y
 RUN apt-get install build-essential -y
 RUN apt-get install pkg-config -y
 RUN apt-get install clang-tools -y
-RUN apt-get install clang lld -y
+RUN apt-get install clang lld llvm -y
 RUN apt-get install wabt -y
 # Editor intelligence and code navigation tools
 RUN apt-get install clangd -y

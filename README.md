@@ -22,13 +22,13 @@ example project (acting as a template)
         ```
 - VS Code, go to https://code.visualstudio.com/docs/setup/linux and follow the instructions (Linux specific).
     - VS Code Extensions (already included inside the dev container):
-        <!-- - C/C++ https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools -->
-        - clangd https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd
-        - EditorConfig https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig
-        - C++ TestMate https://marketplace.visualstudio.com/items?itemName=TestMate.vscode-catch2-test-adapter
-        - gcov Viewer https://marketplace.visualstudio.com/items?itemName=JacquesLucke.gcov-viewer
-        - Live Server https://marketplace.visualstudio.com/items?itemName=ritwickdey.liveserver
-        - Dev Containers https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
+        <!-- - C/C++ `https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools` -->
+        - clangd `https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd`
+        - EditorConfig `https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig`
+        - C++ TestMate `https://marketplace.visualstudio.com/items?itemName=TestMate.vscode-catch2-test-adapter`
+        - Coverage Gutters `https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters`
+        - Live Server `https://marketplace.visualstudio.com/items?itemName=ritwickdey.liveserver`
+        - Dev Containers `https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers`
             - NB! Make sure Dev containers plugin is pointing to Podman, if you are not using Docker. Check `$HOME/.config/Code/User/settings.json` (for Linux).
 - Chromium: `sudo apt install chromium` (application specific, for debugging)
 
@@ -58,7 +58,7 @@ Install the development dependencies:
 sudo apt-get update
 sudo apt-get install -y \
     locales sudo git build-essential pkg-config \
-    clang-tools clang lld clangd bear clang-format editorconfig wabt \
+    clang-tools clang lld llvm clangd bear clang-format editorconfig wabt \
     gdb cppcheck clang-tidy valgrind libclang-rt-dev \
     libgtest-dev libgmock-dev lcov \
     webfs media-types curl ca-certificates util-linux
@@ -157,6 +157,22 @@ In **Run and Debug**, select **Debug WebAssembly (Chrome)** and press **F5**
 
 You will have a debug session with Chrome/Chromium.
 
+## Native tests and coverage
+
+```sh
+sh scripts/dev.sh test
+sh scripts/dev.sh coverage
+```
+
+`test` runs the native C tests. `coverage` runs the same suite with [Clang source-based coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html), prints a line and branch summary, and writes:
+
+- `src/build/coverage/lcov.info` for editors and CI.
+- `src/build/coverage/html/index.html` for browsing line and branch coverage.
+
+In VS Code, run **Coverage (Native)**, then **Coverage Gutters: Watch** to see the results in `src/counter.c`. Run coverage in the same workspace (local or dev container) as the editor so the paths in the report resolve.
+
+The report measures shared C counter logic, not the tests, Clay, the browser event wiring, or the WebAssembly artifact. Release and debug builds are not instrumented. There is no percentage gate.
+
 ## Command reference
 
 These are equivalent ways to run the same workflows.
@@ -169,8 +185,10 @@ These are equivalent ways to run the same workflows.
 | Rebuild release | **Tasks: Run Task** → **Rebuild (Release)** | `sh scripts/dev.sh rebuild release` | `make -C src rebuild-release` (also `make -C src rebuild`) |
 | Rebuild debug | **Tasks: Run Task** → **Rebuild (Debug)** | `sh scripts/dev.sh rebuild debug` | `make -C src rebuild-debug` |
 | Clean | **Tasks: Run Task** → **Clean** | `sh scripts/dev.sh clean` | `make -C src clean` |
-| Build and serve release | **Tasks: Run Task** → **Run (Serve)**; also the default task for **Tasks: Run Test Task** | `sh scripts/dev.sh serve release` | `make -C src serve MODE=release` (also `make -C src serve`) |
+| Build and serve release | **Tasks: Run Task** → **Run (Serve)** | `sh scripts/dev.sh serve release` | `make -C src serve MODE=release` (also `make -C src serve`) |
 | Build and serve debug | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh serve debug` | `make -C src serve MODE=debug` |
+| Run native tests | **Tasks: Run Test Task** (default: **Test (Native)**) | `sh scripts/dev.sh test` | `make -C src test` |
+| Generate native coverage | **Tasks: Run Task** → **Coverage (Native)** | `sh scripts/dev.sh coverage` | `make -C src coverage` |
 | Regenerate compilation database | **Tasks: Run Task** → **Generate compilation database** | `sh scripts/dev.sh compdb` | `make -C src compdb` |
 | Stop the server | No dedicated task; run the script in the integrated terminal, or use Ctrl+C in the serving terminal | `sh scripts/dev.sh stop` | `make -C src stop` |
 | Show command help | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh help` | Prints the script's usage information; no build command |
@@ -193,13 +211,10 @@ These are equivalent ways to run the same workflows.
 | Valgrind and Clang runtime libraries | Support native dynamic analysis and sanitizer builds. Valgrind does not directly analyze the `.wasm` output, and sanitizers require an appropriate instrumented build. |
 | Google Test and Google Mock | Provide C++ testing and mocking libraries for separately configured tests. |
 | C++ TestMate | Discover and run supported C++ test executables in VS Code once those executables are built and configured. |
-| LCOV and gcov Viewer | Collect/report coverage data and display gcov-format results in VS Code, respectively. An instrumented build and coverage-generation commands are required. |
+| LLVM coverage tools | `llvm-profdata` indexes the raw Clang profile; `llvm-cov` prints the summary and exports the LCOV tracefile. |
+| LCOV and Coverage Gutters | LCOV's `genhtml` renders the tracefile as HTML; Coverage Gutters displays its line coverage in VS Code. |
 | webfs and media-types | Serve the built application with `sh scripts/dev.sh serve`, including the WebAssembly MIME type. |
 | Live Server | Provide an optional VS Code web server, configured to serve `src/build/release/`. Use it or webfs, not both on port 8080. |
-
-The current Makefile builds and serves the WebAssembly application. It does not
-define test, static-analysis, sanitizer, or coverage targets. Installing the tools
-and extensions does not enable those workflows automatically.
 
 
 ## Pipeline
@@ -210,3 +225,22 @@ and extensions does not enable those workflows automatically.
 ## License
 
 MIT License, see `LICENSE` for details.
+
+
+## PLAN (TODOs)
+
+| Task | Status |
+| --- | --- |
+| Implement clang | DONE |
+| Implement GDB debugging | PARTLY |
+| Implement Code formatter (clang-format, EditorConfig) | DONE |
+| Implement native code coverage (Clang, LCOV, Coverage Gutters) | DONE |
+| Implement Runtime analysis (llvm/clang sanitizers, valgrind) | PARTLY |
+| Implement static analysis (clang static analyzer, clang-tidy, cppcheck) | PARTLY |
+| Implement testing (unit test + mock) (Google Test + Google Mock, C++ TestMate) | PARTLY |
+| Implement project specific stuff (live server, plus what else?) | PARTLY |
+| List up all project specific stuff (e.g. live server, webfs and media-types, bear and clangd, WABT, ...?) | DONE |
+| Map out options for pipelines, and Implement pipeline that does all the testing as well! (Github action? Azure DevOps Pipeline?)| |
+
+
+

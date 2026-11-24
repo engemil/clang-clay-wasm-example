@@ -6,6 +6,8 @@
 #   make compdb regenerate the compilation database through a forced release build
 #   make rebuild-release force a release rebuild (also make rebuild)
 #   make rebuild-debug   force a debug rebuild
+#   make test     run native C tests
+#   make coverage run native C tests with coverage and generate LCOV and HTML reports
 #   make validate validate the built WebAssembly module with WABT
 #   make inspect inspect the built WebAssembly module with WABT
 #   make serve [MODE=release|debug] build and serve the selected mode (default: release)
@@ -19,6 +21,8 @@ ROOT          := $(abspath ..)
 BUILD         := build
 RELEASE_BUILD := $(BUILD)/release
 DEBUG_BUILD   := $(BUILD)/debug
+TEST_BUILD    := $(BUILD)/test
+COVERAGE_BUILD := $(BUILD)/coverage
 MODE          ?= release
 PID_FILE      := $(abspath $(BUILD)/webfsd.pid)
 PID           := $(shell cat "$(PID_FILE)" 2>/dev/null)
@@ -31,8 +35,15 @@ COMMON_CFLAGS := -std=c17 -ffreestanding \
 CFLAGS        := $(COMMON_CFLAGS) -Os -Wl,--strip-all
 DEBUG_CFLAGS  := $(COMMON_CFLAGS) -O0 -g -Wpedantic -Werror
 
+TEST_CFLAGS    := -std=c17 -Wall -Wextra -Wpedantic -Werror -g
+PROFILE_FLAG   := -fprofile-instr-generate
+LLVM_PROFDATA  ?= $(shell $(CC) -print-prog-name=llvm-profdata)
+LLVM_COV       ?= $(shell $(CC) -print-prog-name=llvm-cov)
+WASM_SOURCES  := main.c counter.c
+WASM_HEADERS  := clay/clay.h counter.h
+
 .PHONY: all release debug prepare compdb rebuild rebuild-release rebuild-debug \
-        validate inspect serve stop clean
+        test coverage validate inspect serve stop clean
 
 all: release
 
@@ -55,17 +66,42 @@ rebuild-release:
 rebuild-debug:
 	$(MAKE) -B debug
 
+test: $(TEST_BUILD)/counter_test
+	$<
+
+coverage: $(COVERAGE_BUILD)/counter_test
+	rm -f "$(COVERAGE_BUILD)/counter.profraw" "$(COVERAGE_BUILD)/counter.profdata" "$(COVERAGE_BUILD)/lcov.info"
+	rm -rf "$(COVERAGE_BUILD)/html"
+	LLVM_PROFILE_FILE="$(abspath $(COVERAGE_BUILD))/counter.profraw" $<
+	$(LLVM_PROFDATA) merge -sparse "$(COVERAGE_BUILD)/counter.profraw" -o "$(COVERAGE_BUILD)/counter.profdata"
+	$(LLVM_COV) report -instr-profile="$(COVERAGE_BUILD)/counter.profdata" $<
+	$(LLVM_COV) export -format=lcov -instr-profile="$(COVERAGE_BUILD)/counter.profdata" $< > "$(COVERAGE_BUILD)/lcov.info.tmp"
+	mv "$(COVERAGE_BUILD)/lcov.info.tmp" "$(COVERAGE_BUILD)/lcov.info"
+	genhtml --branch-coverage --output-directory "$(COVERAGE_BUILD)/html" "$(COVERAGE_BUILD)/lcov.info"
+
+$(TEST_BUILD)/counter_test.o: ../tests/counter_test.c counter.h Makefile | $(TEST_BUILD)
+	$(CC) $(TEST_CFLAGS) -I. -c -o $@ $<
+
+$(TEST_BUILD)/counter_test: counter.c $(TEST_BUILD)/counter_test.o counter.h Makefile
+	$(CC) $(TEST_CFLAGS) -o $@ $< $(TEST_BUILD)/counter_test.o
+
+$(COVERAGE_BUILD)/counter.o: counter.c counter.h Makefile | $(COVERAGE_BUILD)
+	$(CC) $(TEST_CFLAGS) $(PROFILE_FLAG) -fcoverage-mapping -c -o $@ $<
+
+$(COVERAGE_BUILD)/counter_test: $(COVERAGE_BUILD)/counter.o $(TEST_BUILD)/counter_test.o Makefile
+	$(CC) $(PROFILE_FLAG) -o $@ $(filter %.o,$^)
+
 validate: $(RELEASE_BUILD)/index.wasm
 	wasm-validate $<
 
 inspect: $(RELEASE_BUILD)/index.wasm
 	wasm-objdump -x $<
 
-$(RELEASE_BUILD)/index.wasm: main.c clay/clay.h Makefile | $(RELEASE_BUILD)
-	$(CC) $(CFLAGS) -Iclay -o $@ main.c
+$(RELEASE_BUILD)/index.wasm: $(WASM_SOURCES) $(WASM_HEADERS) Makefile | $(RELEASE_BUILD)
+	$(CC) $(CFLAGS) -Iclay -o $@ $(WASM_SOURCES)
 
-$(DEBUG_BUILD)/index.wasm: main.c clay/clay.h Makefile | $(DEBUG_BUILD)
-	$(CC) $(DEBUG_CFLAGS) -Iclay -o $@ main.c
+$(DEBUG_BUILD)/index.wasm: $(WASM_SOURCES) $(WASM_HEADERS) Makefile | $(DEBUG_BUILD)
+	$(CC) $(DEBUG_CFLAGS) -Iclay -o $@ $(WASM_SOURCES)
 
 $(RELEASE_BUILD)/index.html: web/index.html | $(RELEASE_BUILD)
 	cp $< $@
@@ -73,7 +109,7 @@ $(RELEASE_BUILD)/index.html: web/index.html | $(RELEASE_BUILD)
 $(DEBUG_BUILD)/index.html: web/index.html | $(DEBUG_BUILD)
 	cp $< $@
 
-$(RELEASE_BUILD) $(DEBUG_BUILD):
+$(RELEASE_BUILD) $(DEBUG_BUILD) $(TEST_BUILD) $(COVERAGE_BUILD):
 	mkdir -p $@
 
 # Lightweight C static server (webfsd); .wasm served as application/wasm via /etc/mime.types.

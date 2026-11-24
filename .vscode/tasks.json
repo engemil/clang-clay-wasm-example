@@ -134,10 +134,6 @@
             "options": {
                 "cwd": "${workspaceFolder}"
             },
-            "group": {
-                "kind": "test",
-                "isDefault": true
-            },
             "problemMatcher": {
                 "owner": "clang",
                 "fileLocation": ["relative", "${workspaceFolder}/src"],
@@ -150,6 +146,25 @@
                     "message": 5
                 }
             }
+        },
+        {
+            "label": "Test (Native)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "test"],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Coverage (Native)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "coverage"],
+            "group": "test",
+            "problemMatcher": []
         },
         {
             "label": "Prepare WebAssembly Debug",

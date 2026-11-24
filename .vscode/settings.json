@@ -1,5 +1,6 @@
 {
     "clangd.path": "/usr/bin/clangd",
+    "coverage-gutters.coverageBaseDir": "src/build/coverage",
     "[c]": {
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
         "editor.formatOnSave": false
