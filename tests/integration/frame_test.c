@@ -6,9 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-static Clay_Dimensions MeasureText(Clay_StringSlice text, Clay_TextElementConfig *config, void *userData) {
+static Clay_Dimensions MeasureText(Clay_StringSlice text, Clay_TextElementConfig *config,
+                                   void *userData) {
     (void)userData;
-    return (Clay_Dimensions){.width = text.length * config->fontSize / 2.0f, .height = config->fontSize};
+    return (Clay_Dimensions){.width = text.length * config->fontSize / 2.0f,
+                             .height = config->fontSize};
 }
 
 static void FailOnClayError(Clay_ErrorData error) {
@@ -16,7 +18,8 @@ static void FailOnClayError(Clay_ErrorData error) {
     abort();
 }
 
-static void ExpectRenderedCount(float x, float y, bool touchDown, bool mouseDown, const char *expected) {
+static void ExpectRenderedCount(float x, float y, bool touchDown, bool mouseDown,
+                                const char *expected) {
     uintptr_t scratch[3];
     UpdateDrawFrame(scratch, 800, 600, 0, 0, x, y, touchDown, mouseDown, 1.0f / 60.0f);
     const Clay_RenderCommand *commands = (const Clay_RenderCommand *)scratch[2];
@@ -25,7 +28,8 @@ static void ExpectRenderedCount(float x, float y, bool touchDown, bool mouseDown
             continue;
         }
         Clay_StringSlice text = commands[i].renderData.text.stringContents;
-        if ((size_t)text.length == strlen(expected) && memcmp(text.chars, expected, text.length) == 0) {
+        if ((size_t)text.length == strlen(expected) &&
+            memcmp(text.chars, expected, text.length) == 0) {
             return;
         }
     }

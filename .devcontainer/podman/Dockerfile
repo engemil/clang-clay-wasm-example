@@ -19,10 +19,10 @@ RUN apt-get install pkg-config -y
 RUN apt-get install clang lld llvm -y
 RUN apt-get install wabt -y
 # Editor intelligence and code navigation tools
-RUN apt-get install clangd -y
+RUN apt-get install clangd-19 -y
 RUN apt-get install bear -y
 # Formatting tools
-RUN apt-get install clang-format -y
+RUN apt-get install clang-format-19 -y
 RUN apt-get install editorconfig -y
 # Debugging tools
 RUN apt-get install gdb -y

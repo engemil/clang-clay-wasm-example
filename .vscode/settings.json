@@ -1,10 +1,10 @@
 {
-    "clangd.path": "/usr/bin/clangd",
+    "clangd.path": "/usr/bin/clangd-19",
     "coverage-gutters.coverageBaseDir": "src/build/coverage",
     "coverage-gutters.showLineCoverage": true,
     "[c]": {
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
-        "editor.formatOnSave": false
+        "editor.formatOnSave": true
     },
     "[cpp]": {
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",

@@ -19,8 +19,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static const Clay_Color COLOR_TEXT        = {30, 30, 30, 255};
-static const Clay_Color COLOR_BUTTON      = {50, 50, 50, 255};
+static const Clay_Color COLOR_TEXT = {30, 30, 30, 255};
+static const Clay_Color COLOR_BUTTON = {50, 50, 50, 255};
 static const Clay_Color COLOR_BUTTON_TEXT = {255, 255, 255, 255};
 
 static Counter counter;
@@ -35,7 +35,7 @@ static Clay_String U32ToString(uint32_t value, char buffer[12]) {
         buffer[--pos] = (char)('0' + (value % 10));
         value /= 10;
     }
-    return (Clay_String) {
+    return (Clay_String){
         .isStaticallyAllocated = false,
         .length = 11 - pos,
         .chars = &buffer[pos],
@@ -43,14 +43,13 @@ static Clay_String U32ToString(uint32_t value, char buffer[12]) {
 }
 
 CLAY_WASM_EXPORT("UpdateDrawFrame")
-void UpdateDrawFrame(
-    uintptr_t scratch[3], float width, float height,
-    float mouseWheelX, float mouseWheelY, float mousePositionX, float mousePositionY,
-    bool isTouchDown, bool isMouseDown, float deltaTime)
-{
-    Clay_SetLayoutDimensions((Clay_Dimensions) {width, height});
-    Clay_SetPointerState((Clay_Vector2) {mousePositionX, mousePositionY}, isMouseDown || isTouchDown);
-    Clay_UpdateScrollContainers(true, (Clay_Vector2) {mouseWheelX, mouseWheelY}, deltaTime);
+void UpdateDrawFrame(uintptr_t scratch[3], float width, float height, float mouseWheelX,
+                     float mouseWheelY, float mousePositionX, float mousePositionY,
+                     bool isTouchDown, bool isMouseDown, float deltaTime) {
+    Clay_SetLayoutDimensions((Clay_Dimensions){width, height});
+    Clay_SetPointerState((Clay_Vector2){mousePositionX, mousePositionY},
+                         isMouseDown || isTouchDown);
+    Clay_UpdateScrollContainers(true, (Clay_Vector2){mouseWheelX, mouseWheelY}, deltaTime);
 
     // Mouse presses last one frame, but touch presses can span multiple frames.
     bool pressed = (isMouseDown || isTouchDown) && Clay_PointerOver(CLAY_ID("CounterButton"));
@@ -61,33 +60,38 @@ void UpdateDrawFrame(
     Clay_String countText = U32ToString(counter.value, countBuffer);
 
     Clay_BeginLayout();
-    CLAY({ .id = CLAY_ID("Page"),
-        .layout = {
-            .layoutDirection = CLAY_TOP_TO_BOTTOM,
-            .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)},
-            .padding = CLAY_PADDING_ALL(24),
-            .childGap = 12,
-        },
+    CLAY({
+        .id = CLAY_ID("Page"),
+        .layout =
+            {
+                .layoutDirection = CLAY_TOP_TO_BOTTOM,
+                .sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)},
+                .padding = CLAY_PADDING_ALL(24),
+                .childGap = 12,
+            },
     }) {
         CLAY_TEXT(CLAY_STRING("Example Project"),
-            CLAY_TEXT_CONFIG({ .fontSize = 36, .textColor = COLOR_TEXT }));
+                  CLAY_TEXT_CONFIG({.fontSize = 36, .textColor = COLOR_TEXT}));
         CLAY_TEXT(CLAY_STRING("\"Click me\" counter"),
-            CLAY_TEXT_CONFIG({ .fontSize = 24, .textColor = COLOR_TEXT }));
-        CLAY_TEXT(CLAY_STRING("Running C code with WebAssembly (wasm) and Clay library in your browser."),
-            CLAY_TEXT_CONFIG({ .fontSize = 20, .textColor = COLOR_TEXT }));
-        CLAY_TEXT(countText, CLAY_TEXT_CONFIG({ .fontSize = 36, .textColor = COLOR_TEXT }));
+                  CLAY_TEXT_CONFIG({.fontSize = 24, .textColor = COLOR_TEXT}));
+        CLAY_TEXT(
+            CLAY_STRING("Running C code with WebAssembly (wasm) and Clay library in your browser."),
+            CLAY_TEXT_CONFIG({.fontSize = 20, .textColor = COLOR_TEXT}));
+        CLAY_TEXT(countText, CLAY_TEXT_CONFIG({.fontSize = 36, .textColor = COLOR_TEXT}));
 
-        CLAY({ .id = CLAY_ID("CounterButton"),
-            .layout = {
-                .sizing = {CLAY_SIZING_FIT(0), CLAY_SIZING_FIXED(44)},
-                .padding = {.left = 16, .right = 16},
-                .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
-            },
+        CLAY({
+            .id = CLAY_ID("CounterButton"),
+            .layout =
+                {
+                    .sizing = {CLAY_SIZING_FIT(0), CLAY_SIZING_FIXED(44)},
+                    .padding = {.left = 16, .right = 16},
+                    .childAlignment = {.y = CLAY_ALIGN_Y_CENTER},
+                },
             .backgroundColor = COLOR_BUTTON,
             .cornerRadius = CLAY_CORNER_RADIUS(4),
         }) {
             CLAY_TEXT(CLAY_STRING("Click me"),
-                CLAY_TEXT_CONFIG({ .fontSize = 20, .textColor = COLOR_BUTTON_TEXT }));
+                      CLAY_TEXT_CONFIG({.fontSize = 20, .textColor = COLOR_BUTTON_TEXT}));
         }
     }
 

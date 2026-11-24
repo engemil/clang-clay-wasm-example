@@ -11,6 +11,7 @@ usage() {
     cat <<'EOF'
 Usage: sh scripts/dev.sh {build|rebuild|serve} [release|debug]
        sh scripts/dev.sh {prepare|test|coverage|clean|stop|compdb|help}
+       sh scripts/dev.sh {format|format-check}
 
 Commands:
     prepare  Initialize submodules, then regenerate the compilation database.
@@ -22,6 +23,8 @@ Commands:
     serve    Build and serve the selected mode (release by default; Ctrl+C to stop).
     stop     Stop the server using the Makefile's stop target.
     compdb   Regenerate compile_commands.json through a forced release build.
+    format   Format tracked C sources and headers in place.
+    format-check  Fail if tracked C sources or headers need formatting.
     help     Show this help.
 
 Install the development dependencies listed in README.md before preparing.
@@ -33,6 +36,21 @@ EOF
 case "${1:-help}" in
     prepare|compdb|test|coverage)
         exec make -C "$root/src" "$1"
+        ;;
+    format|format-check)
+        if ! command -v clang-format-19 >/dev/null 2>&1; then
+            printf '%s\n' 'clang-format-19 is required; see README.md.' >&2
+            exit 127
+        fi
+        case "$1" in
+            format)       set -- -i ;;
+            format-check) set -- --dry-run --Werror ;;
+        esac
+        # Keep Git's exit status and pass filenames without shell splitting.
+        files=$(mktemp)
+        trap 'rm -f "$files"' EXIT
+        git ls-files -z -- '*.c' '*.h' > "$files"
+        xargs -0 -r clang-format-19 "$@" -- < "$files"
         ;;
     build|rebuild|serve)
         mode=${2-release}

@@ -56,7 +56,7 @@ Install the development dependencies:
 sudo apt-get update
 sudo apt-get install -y \
     locales sudo git make pkg-config \
-    clang lld llvm wabt clangd bear clang-format editorconfig \
+    clang lld llvm wabt clangd-19 bear clang-format-19 editorconfig \
     gdb cppcheck clang-tidy valgrind libclang-rt-dev \
     libgtest-dev libgmock-dev lcov \
     webfs media-types curl util-linux ca-certificates
@@ -199,6 +199,17 @@ Already have a compatible Chromium? Skip the browser install and set `CHROMIUM` 
 - **VS Code:** Run **Coverage (Project)**, then open the Command Palette (**Ctrl+Shift+P**) and select **Coverage Gutters: Watch**
 - **Editors and CI:** Read `src/build/coverage/lcov.info`
 
+## Formatting
+
+```sh
+sh scripts/dev.sh format       # rewrite tracked C sources and headers
+sh scripts/dev.sh format-check # report formatting differences without editing
+```
+
+Both commands use clang-format 19 and the root `.clang-format`. They skip the Clay submodule, untracked files, and generated build outputs. Stage new C files to include them in the check. Use `format-check` in CI.
+
+VS Code formats C on save through clangd 19. The EditorConfig extension applies the root `.editorconfig` whitespace rules for all supported file types. The optional `editorconfig` CLI reports the resolved rules for a path; it does not lint or format files.
+
 ## Command reference
 
 These are equivalent ways to run the same workflows.
@@ -215,6 +226,8 @@ These are equivalent ways to run the same workflows.
 | Build and serve debug | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh serve debug` | `make -C src serve MODE=debug` |
 | Run native tests | **Tasks: Run Test Task** (default: **Test (Native)**) | `sh scripts/dev.sh test` | `make -C src test` |
 | Generate project coverage | **Tasks: Run Task** → **Coverage (Project)** | `sh scripts/dev.sh coverage` | `make -C src coverage` |
+| Format tracked C files | Format Document or save a C file in VS Code (one file at a time) | `sh scripts/dev.sh format` | `clang-format-19 -i` on tracked `.c` and `.h` files |
+| Check tracked C formatting | Run in the integrated terminal | `sh scripts/dev.sh format-check` | `clang-format-19 --dry-run --Werror` on the same files |
 | Regenerate compilation database | **Tasks: Run Task** → **Generate compilation database** | `sh scripts/dev.sh compdb` | `make -C src compdb` |
 | Stop the server | No dedicated task; run the script in the integrated terminal, or use Ctrl+C in the serving terminal | `sh scripts/dev.sh stop` | `make -C src stop` |
 | Show command help | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh help` | Prints the script's usage information; no build command |
@@ -230,8 +243,8 @@ These are equivalent ways to run the same workflows.
 | Clang and LLD | Compile and link the C application into WebAssembly through `src/Makefile`. |
 | WABT | Validate the built module with `make -C src validate`, inspect it with `make -C src inspect`, or disassemble it with `wasm-objdump -d`. |
 | Bear and clangd | Record the build commands in `compile_commands.json` and use them for editor completion, diagnostics, and navigation. |
-| clang-format | Format C/C++ using the repository's `.clang-format` rules. VS Code can format through the clangd extension. |
-| EditorConfig | Apply `.editorconfig` whitespace conventions through the editor extension. The CLI package alone does not configure VS Code. |
+| clang-format 19 | Apply the repository's C formatting rules from the command line; clangd 19 uses the same configuration in VS Code. |
+| EditorConfig | Apply `.editorconfig` whitespace conventions through an editor or its extension. |
 | clang-tidy, cppcheck, and clang-tools | Provide static analysis and additional Clang utilities. Installation alone does not run analysis. |
 | GDB | Debug native executables; it is not configured here to debug the browser's WebAssembly execution. |
 | Valgrind and Clang runtime libraries | Support native dynamic analysis and sanitizer builds. Valgrind does not directly analyze the `.wasm` output, and sanitizers require an appropriate instrumented build. |
@@ -266,7 +279,7 @@ MIT License, see `LICENSE` for details.
 | Implement static analysis (clang static analyzer, clang-tidy, cppcheck) | PARTLY |
 | Implement testing (unit test + mock) (Google Test + Google Mock, C++ TestMate) | PARTLY |
 | Implement project specific stuff (live server, plus what else?) | PARTLY |
-| List up all project specific stuff (e.g. live server, webfs and media-types, bear and clangd, WABT, ...?) | DONE |
+| List up all project specific stuff (e.g. live server, webfs and media-types, bear and clangd, WABT, ...?) | PARTLY |
 | Map out options for pipelines, and Implement pipeline that does all the testing as well! (Github action? Azure DevOps Pipeline?)| |
 
 
