@@ -17,7 +17,7 @@ Commands:
     build    Build the WebAssembly application (release by default).
     rebuild  Force a rebuild of only the selected mode (release by default).
     test     Run the native C tests.
-    coverage Run the native C tests with coverage and generate LCOV and HTML reports.
+    coverage Run native and browser tests and generate LCOV and HTML reports.
     clean    Remove all build outputs.
     serve    Build and serve the selected mode (release by default; Ctrl+C to stop).
     stop     Stop the server using the Makefile's stop target.

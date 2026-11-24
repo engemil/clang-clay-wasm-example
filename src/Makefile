@@ -7,7 +7,7 @@
 #   make rebuild-release force a release rebuild (also make rebuild)
 #   make rebuild-debug   force a debug rebuild
 #   make test     run native C tests
-#   make coverage run native C tests with coverage and generate LCOV and HTML reports
+#   make coverage run native and browser tests and generate LCOV and HTML reports
 #   make validate validate the built WebAssembly module with WABT
 #   make inspect inspect the built WebAssembly module with WABT
 #   make serve [MODE=release|debug] build and serve the selected mode (default: release)
@@ -40,10 +40,14 @@ PROFILE_FLAG   := -fprofile-instr-generate
 LLVM_PROFDATA  ?= $(shell $(CC) -print-prog-name=llvm-profdata)
 LLVM_COV       ?= $(shell $(CC) -print-prog-name=llvm-cov)
 WASM_SOURCES  := main.c counter.c
-WASM_HEADERS  := clay/clay.h counter.h
+WASM_HEADERS  := clay/clay.h counter.h frame.h
+NATIVE_TOOLCHAIN := $(TEST_BUILD)/toolchain
+TEST_OBJECTS  := $(addprefix $(TEST_BUILD)/,native_tests.o counter_test.o frame_test.o)
+COVERAGE_OBJECTS := $(WASM_SOURCES:%.c=$(COVERAGE_BUILD)/%.o)
+COVERAGE_FILTER := -ignore-filename-regex=/clay/
 
 .PHONY: all release debug prepare compdb rebuild rebuild-release rebuild-debug \
-        test coverage validate inspect serve stop clean
+        test coverage validate inspect serve stop clean check-native-toolchain
 
 all: release
 
@@ -66,29 +70,44 @@ rebuild-release:
 rebuild-debug:
 	$(MAKE) -B debug
 
-test: $(TEST_BUILD)/counter_test
+test: $(TEST_BUILD)/native_tests
 	$<
 
-coverage: $(COVERAGE_BUILD)/counter_test
-	rm -f "$(COVERAGE_BUILD)/counter.profraw" "$(COVERAGE_BUILD)/counter.profdata" "$(COVERAGE_BUILD)/lcov.info"
+# Istanbul can mark function declarations that have no executable line entry.
+coverage: $(COVERAGE_BUILD)/native_tests $(RELEASE_BUILD)/index.wasm
+	rm -f "$(COVERAGE_BUILD)/native.profraw" "$(COVERAGE_BUILD)/native.profdata" "$(COVERAGE_BUILD)/lcov.info"
 	rm -rf "$(COVERAGE_BUILD)/html"
-	LLVM_PROFILE_FILE="$(abspath $(COVERAGE_BUILD))/counter.profraw" $<
-	$(LLVM_PROFDATA) merge -sparse "$(COVERAGE_BUILD)/counter.profraw" -o "$(COVERAGE_BUILD)/counter.profdata"
-	$(LLVM_COV) report -instr-profile="$(COVERAGE_BUILD)/counter.profdata" $<
-	$(LLVM_COV) export -format=lcov -instr-profile="$(COVERAGE_BUILD)/counter.profdata" $< > "$(COVERAGE_BUILD)/lcov.info.tmp"
+	LLVM_PROFILE_FILE="$(abspath $(COVERAGE_BUILD))/native.profraw" $<
+	$(LLVM_PROFDATA) merge -sparse "$(COVERAGE_BUILD)/native.profraw" -o "$(COVERAGE_BUILD)/native.profdata"
+	$(LLVM_COV) report $(COVERAGE_FILTER) -instr-profile="$(COVERAGE_BUILD)/native.profdata" $<
+	$(LLVM_COV) export -format=lcov $(COVERAGE_FILTER) -instr-profile="$(COVERAGE_BUILD)/native.profdata" $< > "$(COVERAGE_BUILD)/native.lcov"
+	node "$(ROOT)/tests/coverage/browser_coverage.mjs" "$(RELEASE_BUILD)" "$(COVERAGE_BUILD)"
+	cat "$(COVERAGE_BUILD)/native.lcov" "$(COVERAGE_BUILD)/browser.lcov" > "$(COVERAGE_BUILD)/lcov.info.tmp"
 	mv "$(COVERAGE_BUILD)/lcov.info.tmp" "$(COVERAGE_BUILD)/lcov.info"
-	genhtml --branch-coverage --output-directory "$(COVERAGE_BUILD)/html" "$(COVERAGE_BUILD)/lcov.info"
+	genhtml --no-function-coverage --branch-coverage --source-directory "$(ROOT)" \
+	    --output-directory "$(COVERAGE_BUILD)/html" "$(COVERAGE_BUILD)/lcov.info"
 
-$(TEST_BUILD)/counter_test.o: ../tests/unit_test/counter_test.c counter.h Makefile | $(TEST_BUILD)
+# A bind-mounted checkout can reuse build/ across compilers and source paths.
+$(NATIVE_TOOLCHAIN): check-native-toolchain | $(TEST_BUILD)
+	@set -e; { printf '%s\n' "$(CURDIR)" "$(CC)"; $(CC) --version; } > "$@.tmp"; \
+	    if cmp -s "$@.tmp" "$@"; then rm -f "$@.tmp"; else mv -f "$@.tmp" "$@"; fi
+
+$(TEST_BUILD)/native_tests.o: ../tests/shared/native_tests.c Makefile $(NATIVE_TOOLCHAIN) | $(TEST_BUILD)
+	$(CC) $(TEST_CFLAGS) -c -o $@ $<
+
+$(TEST_BUILD)/counter_test.o: ../tests/unit/counter_test.c counter.h Makefile $(NATIVE_TOOLCHAIN) | $(TEST_BUILD)
 	$(CC) $(TEST_CFLAGS) -I. -c -o $@ $<
 
-$(TEST_BUILD)/counter_test: counter.c $(TEST_BUILD)/counter_test.o counter.h Makefile
-	$(CC) $(TEST_CFLAGS) -o $@ $< $(TEST_BUILD)/counter_test.o
+$(TEST_BUILD)/frame_test.o: ../tests/integration/frame_test.c $(WASM_HEADERS) Makefile $(NATIVE_TOOLCHAIN) | $(TEST_BUILD)
+	$(CC) $(TEST_CFLAGS) -I. -Iclay -c -o $@ $<
 
-$(COVERAGE_BUILD)/counter.o: counter.c counter.h Makefile | $(COVERAGE_BUILD)
-	$(CC) $(TEST_CFLAGS) $(PROFILE_FLAG) -fcoverage-mapping -c -o $@ $<
+$(TEST_BUILD)/native_tests: $(WASM_SOURCES) $(TEST_OBJECTS) $(WASM_HEADERS) Makefile
+	$(CC) $(TEST_CFLAGS) -Iclay -o $@ $(filter %.c %.o,$^)
 
-$(COVERAGE_BUILD)/counter_test: $(COVERAGE_BUILD)/counter.o $(TEST_BUILD)/counter_test.o Makefile
+$(COVERAGE_OBJECTS): $(COVERAGE_BUILD)/%.o: %.c $(WASM_HEADERS) Makefile $(NATIVE_TOOLCHAIN) | $(COVERAGE_BUILD)
+	$(CC) $(TEST_CFLAGS) $(PROFILE_FLAG) -fcoverage-mapping -Iclay -c -o $@ $<
+
+$(COVERAGE_BUILD)/native_tests: $(COVERAGE_OBJECTS) $(TEST_OBJECTS) Makefile
 	$(CC) $(PROFILE_FLAG) -o $@ $(filter %.o,$^)
 
 validate: $(RELEASE_BUILD)/index.wasm

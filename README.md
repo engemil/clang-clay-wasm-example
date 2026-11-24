@@ -60,7 +60,10 @@ sudo apt-get install -y \
     gdb cppcheck clang-tidy valgrind libclang-rt-dev \
     libgtest-dev libgmock-dev lcov \
     webfs media-types curl util-linux ca-certificates
+sudo apt-get install -y nodejs npm
 ```
+
+> NB! Make sure you have Node 20+ (`nodejs`)
 
 Prepare the project after installing the dependencies:
 
@@ -149,27 +152,52 @@ sh scripts/dev.sh clean
 
 ## Debug (in VS Code)
 
-> Before continuing stop any manually started server or Live Server using port 8080
+> Before continuing make sure to have nothing running or stop anything using port 8080
 
 In **Run and Debug**, select **Debug WebAssembly (Chrome)** and press **F5**
 
 You will have a debug session with Chrome/Chromium.
 
-## Native tests and coverage
+## Tests and project coverage
+
+`tests/` groups test related code.
+
+### What coverage measures
+
+| Coverage | Files | How it is measured |
+| --- | --- | --- |
+| Native C | `src/main.c`, `src/counter.c` | [Clang source-based coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html) from the native tests. |
+| Browser JavaScript | Script in `src/web/index.html` | Istanbul coverage from the Chromium counter test, which sends real clicks and advances frames with Playwright's test clock. |
+
+The browser test runs the real WASM app, but the WASM binary is not instrumented. Coverage excludes Clay, tests, build scripts, HTML markup, and CSS. There is no percentage gate.
+
+### Native tests
 
 ```sh
 sh scripts/dev.sh test
+```
+
+Runs the counter and frame-rendering tests (C code) without a browser.
+
+### Set up and run coverage
+
+`sh scripts/dev.sh coverage` runs the native C tests and the end-to-end Chromium test, then combines their C and JavaScript coverage into one report.
+
+Run these commands:
+
+```sh
+npm ci --prefix tests
+npm exec --prefix tests -- playwright-core install --with-deps --only-shell chromium
 sh scripts/dev.sh coverage
 ```
 
-`test` runs the native C tests. `coverage` runs the same suite with [Clang source-based coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html), prints a line and branch summary, and writes:
+Already have a compatible Chromium? Skip the browser install and set `CHROMIUM` to its executable path when running coverage. Native coverage objects rebuild automatically if the Clang toolchain or checkout path changes.
 
-- `src/build/coverage/lcov.info` for editors and CI.
-- `src/build/coverage/html/index.html` for browsing line and branch coverage.
+### View the combined report
 
-In VS Code, run **Coverage (Native)**, then **Coverage Gutters: Watch** to see the results in `src/counter.c`. Run coverage in the same workspace (local or dev container) as the editor so the paths in the report resolve.
-
-The report measures shared C counter logic, not the tests, Clay, the browser event wiring, or the WebAssembly artifact. Release and debug builds are not instrumented. There is no percentage gate.
+- **Browser:** Open `src/build/coverage/html/index.html` for line and branch coverage
+- **VS Code:** Run **Coverage (Project)**, then open the Command Palette (**Ctrl+Shift+P**) and select **Coverage Gutters: Watch**
+- **Editors and CI:** Read `src/build/coverage/lcov.info`
 
 ## Command reference
 
@@ -186,7 +214,7 @@ These are equivalent ways to run the same workflows.
 | Build and serve release | **Tasks: Run Task** → **Run (Serve)** | `sh scripts/dev.sh serve release` | `make -C src serve MODE=release` (also `make -C src serve`) |
 | Build and serve debug | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh serve debug` | `make -C src serve MODE=debug` |
 | Run native tests | **Tasks: Run Test Task** (default: **Test (Native)**) | `sh scripts/dev.sh test` | `make -C src test` |
-| Generate native coverage | **Tasks: Run Task** → **Coverage (Native)** | `sh scripts/dev.sh coverage` | `make -C src coverage` |
+| Generate project coverage | **Tasks: Run Task** → **Coverage (Project)** | `sh scripts/dev.sh coverage` | `make -C src coverage` |
 | Regenerate compilation database | **Tasks: Run Task** → **Generate compilation database** | `sh scripts/dev.sh compdb` | `make -C src compdb` |
 | Stop the server | No dedicated task; run the script in the integrated terminal, or use Ctrl+C in the serving terminal | `sh scripts/dev.sh stop` | `make -C src stop` |
 | Show command help | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh help` | Prints the script's usage information; no build command |
@@ -210,6 +238,7 @@ These are equivalent ways to run the same workflows.
 | Google Test and Google Mock | Provide C++ testing and mocking libraries for separately configured tests. |
 | C++ TestMate | Discover and run supported C++ test executables in VS Code once those executables are built and configured. |
 | LLVM coverage tools | `llvm-profdata` indexes the raw Clang profile; `llvm-cov` prints the summary and exports the LCOV tracefile. |
+| Playwright and Istanbul | Run the WASM app in headless Chromium and collect coverage for its JavaScript renderer. |
 | LCOV and Coverage Gutters | LCOV's `genhtml` renders the tracefile as HTML; Coverage Gutters displays its line coverage in VS Code. |
 | webfs and media-types | Serve the built application with `sh scripts/dev.sh serve`, including the WebAssembly MIME type. |
 | Live Server | Provide an optional VS Code web server, configured to serve `src/build/release/`. Use it or webfs, not both on port 8080. |
@@ -232,7 +261,7 @@ MIT License, see `LICENSE` for details.
 | Implement clang | DONE |
 | Implement GDB debugging | PARTLY |
 | Implement Code formatter (clang-format, EditorConfig) | DONE |
-| Implement native code coverage (Clang, LCOV, Coverage Gutters) | DONE |
+| Implement project code coverage (Clang, Istanbul, LCOV, Coverage Gutters) | DONE |
 | Implement Runtime analysis (llvm/clang sanitizers, valgrind) | PARTLY |
 | Implement static analysis (clang static analyzer, clang-tidy, cppcheck) | PARTLY |
 | Implement testing (unit test + mock) (Google Test + Google Mock, C++ TestMate) | PARTLY |

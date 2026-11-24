@@ -159,7 +159,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Coverage (Native)",
+            "label": "Coverage (Project)",
             "type": "process",
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/dev.sh", "coverage"],

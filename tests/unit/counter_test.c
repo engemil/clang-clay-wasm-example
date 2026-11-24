@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-int main(void) {
+void TestCounter(void) {
     Counter counter = {0};
 
     Counter_Update(&counter, false); // No active press over the button.

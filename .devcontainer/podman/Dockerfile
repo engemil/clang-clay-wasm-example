@@ -36,6 +36,8 @@ RUN apt-get install libclang-rt-dev -y
 RUN apt-get install libgtest-dev -y
 RUN apt-get install libgmock-dev -y
 RUN apt-get install lcov -y
+# Additional tools for code coverage
+RUN apt-get install -y nodejs npm
 
 # Application related dependencies
 # lightweight C static server for `make serve` (.wasm MIME via /etc/mime.types)

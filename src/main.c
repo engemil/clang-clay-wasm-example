@@ -14,6 +14,7 @@
 #define CLAY_IMPLEMENTATION
 #include "clay.h"
 #include "counter.h"
+#include "frame.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -43,7 +44,7 @@ static Clay_String U32ToString(uint32_t value, char buffer[12]) {
 
 CLAY_WASM_EXPORT("UpdateDrawFrame")
 void UpdateDrawFrame(
-    uint32_t scratchAddress, float width, float height,
+    uintptr_t scratch[3], float width, float height,
     float mouseWheelX, float mouseWheelY, float mousePositionX, float mousePositionY,
     bool isTouchDown, bool isMouseDown, float deltaTime)
 {
@@ -92,8 +93,7 @@ void UpdateDrawFrame(
 
     // Hand the render command array to JS via the scratch address.
     Clay_RenderCommandArray commands = Clay_EndLayout();
-    uint32_t *scratch = (uint32_t *)(uintptr_t)scratchAddress;
     scratch[0] = commands.capacity;
     scratch[1] = commands.length;
-    scratch[2] = (uint32_t)(uintptr_t)commands.internalArray;
+    scratch[2] = (uintptr_t)commands.internalArray;
 }
