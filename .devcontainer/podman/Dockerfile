@@ -6,49 +6,40 @@ FROM docker.io/library/debian:13.7@sha256:9c6e381421d0f48d1b8133e573f33c185ee16c
 
 # Avoid interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
-# Update and basic dependencies
-RUN apt-get update
-RUN apt-get install locales -y
-RUN apt-get install sudo -y
-RUN apt-get install git -y
 
-# Install C/C++ build tools and development tools
-#RUN apt-get install build-essential -y
-RUN apt-get install make -y
-RUN apt-get install pkg-config -y
-RUN apt-get install clang lld llvm -y
-RUN apt-get install wabt -y
-# Editor intelligence and code navigation tools
-RUN apt-get install clangd-19 -y
-RUN apt-get install bear -y
-# Formatting tools
-RUN apt-get install clang-format-19 -y
-RUN apt-get install editorconfig -y
-# Debugging tools
-RUN apt-get install gdb -y
-# static analysis tools
-RUN apt-get install cppcheck -y
-RUN apt-get install clang-tidy -y
-# Dynamic analysis tools
-RUN apt-get install valgrind -y
-RUN apt-get install libclang-rt-dev -y
-# Testing and coverage tools
-RUN apt-get install libgtest-dev -y
-RUN apt-get install libgmock-dev -y
-RUN apt-get install lcov -y
-# Additional tools for code coverage
-RUN apt-get install -y nodejs npm
-
-# Application related dependencies
-# lightweight C static server for `make serve` (.wasm MIME via /etc/mime.types)
-RUN apt-get install webfs media-types -y
-
-# Extra tools for development
-RUN apt-get install curl util-linux -y
-RUN apt-get install ca-certificates -y
-
-# Clean up
-RUN rm -rf /var/lib/apt/lists/*
+# Refresh the package index and install tools in the same layer.
+# webfs and media-types provide the static server and .wasm MIME type for `make serve`.
+RUN apt-get update \
+    && apt-get install -y \
+        bear \
+        ca-certificates \
+        clang \
+        clang-format-19 \
+        clang-tidy \
+        clangd-19 \
+        cppcheck \
+        curl \
+        editorconfig \
+        gdb \
+        git \
+        lcov \
+        libclang-rt-dev \
+        libgmock-dev \
+        libgtest-dev \
+        lld \
+        llvm \
+        locales \
+        make \
+        media-types \
+        nodejs \
+        npm \
+        pkg-config \
+        sudo \
+        util-linux \
+        valgrind \
+        wabt \
+        webfs \
+    && rm -rf /var/lib/apt/lists/*
 
 # Generate UTF-8 locale so host LANG/LC_* env vars (forwarded by VS Code) resolve
 RUN sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && locale-gen
@@ -73,9 +64,6 @@ WORKDIR /home/$USERNAME
 ## Here you can add any additional tools or dependencies that you want to install as the non-root user with sudo privileges.
 
 
-
-# Clean up
-RUN rm -rf /var/lib/apt-get/lists/*
 
 # Make workspace directory
 RUN sudo mkdir /workspace && sudo chown $USERNAME:$USERNAME /workspace
