@@ -151,11 +151,35 @@
             "label": "Test (Native)",
             "type": "process",
             "command": "sh",
-            "args": ["${workspaceFolder}/scripts/dev.sh", "test"],
+            "args": ["${workspaceFolder}/scripts/dev.sh", "test", "native"],
             "group": {
                 "kind": "test",
                 "isDefault": true
             },
+            "problemMatcher": []
+        },
+        {
+            "label": "Test (Native: Valgrind)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "test", "native", "valgrind"],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Test (Native: Sanitizers)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "test", "native", "sanitize"],
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Test (Browser)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "test", "browser"],
+            "group": "test",
             "problemMatcher": []
         },
         {
@@ -164,6 +188,13 @@
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/dev.sh", "coverage"],
             "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Analyze (Static)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "analyze"],
             "problemMatcher": []
         },
         {

@@ -37,7 +37,7 @@ static Clay_String U32ToString(uint32_t value, char buffer[12]) {
     }
     return (Clay_String){
         .isStaticallyAllocated = false,
-        .length = 11 - pos,
+        .length = (int32_t)(11 - pos),
         .chars = &buffer[pos],
     };
 }

@@ -9,8 +9,8 @@
 static Clay_Dimensions MeasureText(Clay_StringSlice text, Clay_TextElementConfig *config,
                                    void *userData) {
     (void)userData;
-    return (Clay_Dimensions){.width = text.length * config->fontSize / 2.0f,
-                             .height = config->fontSize};
+    float width = (float)text.length * (float)config->fontSize / 2.0f;
+    return (Clay_Dimensions){.width = width, .height = config->fontSize};
 }
 
 static void FailOnClayError(Clay_ErrorData error) {

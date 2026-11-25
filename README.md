@@ -1,16 +1,15 @@
 # example_project
 
-example project (acting as a template)
+Example project, as a template for C17 projects that target the browser. The example is a click counter built with Clay.  Clang and LLD compile and link it to freestanding WebAssembly without Emscripten or a C standard library. Javascript renders the UI in the browser.
 
-(TODO: add to the point info about this example setup. I want it to show specified dev, e.g. clang (not gcc), etc...) Builds use C17 and freestanding compilation.
-
+The template include native C tests, a Chromium end-to-end test, static and runtime analysis, and code coverage. Develop on Linux locally or in Docker or Podman dev container. Use GNU Make directly, run `sh scripts/dev.sh`, or use the configured VS Code tasks.
 
 
 ## Prerequisites
 
-> Note that this setup assumes you are using Debian/Ubuntu (Linux) and will run dev container. Follow the instructions under **Local setup without a dev container** under **Environment Setup** if you are not to use VS code and/or container(s).
+> Note that this setup assumes you are using Debian/Ubuntu (Linux).
 
-- Container Engine (required only for dev-container development)
+- Container Engine (required for dev container development)
     - Docker:
         ```sh
         curl -fsSL https://get.docker.com -o get-docker.sh
@@ -21,18 +20,19 @@ example project (acting as a template)
         sudo apt update && sudo apt install -y podman
         ```
 - VS Code, go to `https://code.visualstudio.com/docs/setup/linux` and follow the instructions (Linux specific).
-    - VS Code Extensions (already included inside the dev container):
-        <!-- - C/C++ `https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools` -->
-        - clangd `https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd`
-        - EditorConfig `https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig`
-        - C++ TestMate `https://marketplace.visualstudio.com/items?itemName=TestMate.vscode-catch2-test-adapter`
-        - Coverage Gutters `https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters`
-        - Live Server `https://marketplace.visualstudio.com/items?itemName=ritwickdey.liveserver`
+    - VS Code Extensions:
         - Dev Containers `https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers`
             - NB! Make sure Dev containers plugin is pointing to Podman, if you are not using Docker. Check `$HOME/.config/Code/User/settings.json` (for Linux).
+        - These already included inside the dev container:
+            <!-- - C/C++ `https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools` -->
+            - clangd `https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd`
+            - EditorConfig `https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig`
+            - C++ TestMate `https://marketplace.visualstudio.com/items?itemName=TestMate.vscode-catch2-test-adapter`
+            - Coverage Gutters `https://marketplace.visualstudio.com/items?itemName=ryanluker.vscode-coverage-gutters`
+            - Live Server `https://marketplace.visualstudio.com/items?itemName=ritwickdey.liveserver`    
 - Chromium: `sudo apt install chromium` (application specific, for debugging)
 
-> Run commands from entry point (e.g. `sh scripts/dev.sh <command>`). From another directory, use an absolute paths.
+> Run commands from project root folder (e.g. `sh scripts/dev.sh <command>`). From another directory, use an absolute paths.
 
 
 ## Environment Setup
@@ -48,9 +48,7 @@ You can skip **Local setup without a dev container** from here.
 
 ### Local setup without a dev container
 
-If you prepare to not run in container, this is the "manual" approach.
-
-Install the development dependencies:
+This is the "manual" approach. Install the development dependencies:
 
 ```sh
 sudo apt-get update
@@ -101,8 +99,6 @@ sh scripts/dev.sh build debug
 | Release (default) | `-Os -Wall -Wextra`, with debug information stripped | `src/build/release/` |
 | Debug | `-O0 -g -Wall -Wextra -Wpedantic -Werror`, with debug information preserved | `src/build/debug/` |
 
-In VS Code, **Tasks: Run Build Task** runs **Build (Release)** by default. For debug, use **Tasks: Run Task** → **Build (Debug)**.
-
 
 ### Validate and inspect WebAssembly
 
@@ -121,7 +117,7 @@ wasm-objdump -d src/build/release/index.wasm
 
 ### Serve (run) the application
 
-Build and serve the selected mode with webfsd:
+(Build and) serve the selected mode with webfsd:
 
 ```sh
 sh scripts/dev.sh serve release  # or just: sh scripts/dev.sh serve
@@ -158,48 +154,87 @@ In **Run and Debug**, select **Debug WebAssembly (Chrome)** and press **F5**
 
 You will have a debug session with Chrome/Chromium.
 
-## Tests and project coverage
+For repeatable pass/fail checks instead of an interactive debug session, see [Testing](#testing).
 
-`tests/` groups test related code.
+## Testing
 
-### What coverage measures
+### Functional tests
+
+Functional tests check expected behavior. Choose the suite explicitly with `test <suite> [mode]`; see the [command reference](#command-reference) for the available combinations.
+
+#### Native unit and integration tests
+
+```sh
+sh scripts/dev.sh test native
+```
+
+This runs the C counter unit test and frame-rendering integration test. **Test (Native)** is the fast default in VS Code.
+
+The counter test uses plain C assertions. The frame test uses the real Clay layout code with a deterministic text-measurement stub. It does not verify callback interactions or use Google Mock.
+
+#### Browser end-to-end test
+
+Install the Node dependencies and Playwright Chromium once for both browser testing and coverage:
+
+```sh
+npm ci --prefix tests
+npm exec --prefix tests -- playwright-core install --with-deps --only-shell chromium
+```
+
+And run test:
+
+```sh
+sh scripts/dev.sh test browser
+```
+
+The test serves the usual release HTML and Wasm on a temporary loopback port, clicks the counter in headless Chromium, and exits without producing a coverage report. If you already have a compatible Chromium and its system libraries, skip the browser install and set `CHROMIUM` to its executable path for `test browser` or `coverage`.
+
+### Dynamic analysis
+
+These modes run the same native tests with runtime checks for memory errors and undefined behavior:
+
+```sh
+sh scripts/dev.sh test native valgrind
+sh scripts/dev.sh test native sanitize
+```
+
+- **Valgrind Memcheck** runs the regular native test binary with debug symbols. Memory errors and definite or possible leaks fail the run; still-reachable allocations are reported without failing it.
+- **Clang sanitizers** build a separate binary in `src/build/sanitize/` with AddressSanitizer and UndefinedBehaviorSanitizer. Leak detection is enabled on Linux. Findings fail the run, and `llvm-symbolizer` resolves stack frames to source locations.
+
+Both dev containers include Valgrind, Clang's matching sanitizer runtimes, and `llvm-symbolizer`. See [local setup](#local-setup-without-a-dev-container) for Debian packages. These checks cover only the native C paths the tests execute, not the browser's WebAssembly or JavaScript renderer.
+
+### Static analysis
+
+```sh
+sh scripts/dev.sh analyze
+```
+
+This runs **Clang Static Analyzer** (`clang --analyze`), **clang-tidy** (bug-prone checks configured in `.clang-tidy`), and **cppcheck** (errors plus warning, performance, and portability checks). No executable is produced or run. Diagnostics selected by these checks fail the command. To continue with the other tools after a failure, run `make -k -C src analyze`.
+
+The workflow checks the application C sources and native C tests. The Clang tools use the WebAssembly compiler flags for the application and native flags for the tests. Cppcheck uses its native platform model and excludes diagnostics located in the vendored Clay headers. Initialize the Clay submodule first; this command does not require a generated `compile_commands.json`.
+
+### Code coverage
+
+```sh
+sh scripts/dev.sh coverage
+```
+
+Coverage reruns the same two suites with instrumentation and combines their C and JavaScript results. Native coverage objects rebuild automatically if the Clang toolchain or checkout path changes.
 
 | Coverage | Files | How it is measured |
 | --- | --- | --- |
 | Native C | `src/main.c`, `src/counter.c` | [Clang source-based coverage](https://clang.llvm.org/docs/SourceBasedCodeCoverage.html) from the native tests. |
 | Browser JavaScript | Script in `src/web/index.html` | Istanbul coverage from the Chromium counter test, which sends real clicks and advances frames with Playwright's test clock. |
 
-The browser test runs the real WASM app, but the WASM binary is not instrumented. Coverage excludes Clay, tests, build scripts, HTML markup, and CSS. There is no percentage gate.
+The browser test runs the real Wasm app, but the Wasm binary is not instrumented. Coverage excludes Clay, tests, build scripts, HTML markup, and CSS. There is no percentage gate.
 
-### Native tests
-
-```sh
-sh scripts/dev.sh test
-```
-
-Runs the counter and frame-rendering tests (C code) without a browser.
-
-### Set up and run coverage
-
-`sh scripts/dev.sh coverage` runs the native C tests and the end-to-end Chromium test, then combines their C and JavaScript coverage into one report.
-
-Run these commands:
-
-```sh
-npm ci --prefix tests
-npm exec --prefix tests -- playwright-core install --with-deps --only-shell chromium
-sh scripts/dev.sh coverage
-```
-
-Already have a compatible Chromium? Skip the browser install and set `CHROMIUM` to its executable path when running coverage. Native coverage objects rebuild automatically if the Clang toolchain or checkout path changes.
-
-### View the combined report
+#### View the combined report
 
 - **Browser:** Open `src/build/coverage/html/index.html` for line and branch coverage
 - **VS Code:** Run **Coverage (Project)**, then open the Command Palette (**Ctrl+Shift+P**) and select **Coverage Gutters: Watch**
 - **Editors and CI:** Read `src/build/coverage/lcov.info`
 
-## Formatting
+### Formatting
 
 ```sh
 sh scripts/dev.sh format       # rewrite tracked C sources and headers
@@ -224,7 +259,11 @@ These are equivalent ways to run the same workflows.
 | Clean | **Tasks: Run Task** → **Clean** | `sh scripts/dev.sh clean` | `make -C src clean` |
 | Build and serve release | **Tasks: Run Task** → **Run (Serve)** | `sh scripts/dev.sh serve release` | `make -C src serve MODE=release` (also `make -C src serve`) |
 | Build and serve debug | No dedicated task; run the script in the integrated terminal | `sh scripts/dev.sh serve debug` | `make -C src serve MODE=debug` |
-| Run native tests | **Tasks: Run Test Task** (default: **Test (Native)**) | `sh scripts/dev.sh test` | `make -C src test` |
+| Run native tests | **Tasks: Run Test Task** (default: **Test (Native)**) | `sh scripts/dev.sh test native` | `make -C src test-native` |
+| Run native tests under Memcheck | **Tasks: Run Task** → **Test (Native: Valgrind)** | `sh scripts/dev.sh test native valgrind` | `make -C src test-native-valgrind` |
+| Run native tests with Clang sanitizers | **Tasks: Run Task** → **Test (Native: Sanitizers)** | `sh scripts/dev.sh test native sanitize` | `make -C src test-native-sanitize` |
+| Run browser test | **Tasks: Run Task** → **Test (Browser)** | `sh scripts/dev.sh test browser` | `make -C src test-browser` |
+| Run static analysis | **Tasks: Run Task** → **Analyze (Static)** | `sh scripts/dev.sh analyze` | `make -C src analyze` |
 | Generate project coverage | **Tasks: Run Task** → **Coverage (Project)** | `sh scripts/dev.sh coverage` | `make -C src coverage` |
 | Format tracked C files | Format Document or save a C file in VS Code (one file at a time) | `sh scripts/dev.sh format` | `clang-format-19 -i` on tracked `.c` and `.h` files |
 | Check tracked C formatting | Run in the integrated terminal | `sh scripts/dev.sh format-check` | `clang-format-19 --dry-run --Werror` on the same files |
@@ -236,26 +275,28 @@ These are equivalent ways to run the same workflows.
 
 ## Development Tools Overview
 
-(TODO: Improve!)
-
-| Tools | Purpose |
-| --- | --- |
-| Clang and LLD | Compile and link the C application into WebAssembly through `src/Makefile`. |
-| WABT | Validate the built module with `make -C src validate`, inspect it with `make -C src inspect`, or disassemble it with `wasm-objdump -d`. |
-| Bear and clangd | Record the build commands in `compile_commands.json` and use them for editor completion, diagnostics, and navigation. |
-| clang-format 19 | Apply the repository's C formatting rules from the command line; clangd 19 uses the same configuration in VS Code. |
-| EditorConfig | Apply `.editorconfig` whitespace conventions through an editor or its extension. |
-| clang-tidy, cppcheck, and clang-tools | Provide static analysis and additional Clang utilities. Installation alone does not run analysis. |
-| GDB | Debug native executables; it is not configured here to debug the browser's WebAssembly execution. |
-| Valgrind and Clang runtime libraries | Support native dynamic analysis and sanitizer builds. Valgrind does not directly analyze the `.wasm` output, and sanitizers require an appropriate instrumented build. |
-| Google Test and Google Mock | Provide C++ testing and mocking libraries for separately configured tests. |
-| C++ TestMate | Discover and run supported C++ test executables in VS Code once those executables are built and configured. |
-| LLVM coverage tools | `llvm-profdata` indexes the raw Clang profile; `llvm-cov` prints the summary and exports the LCOV tracefile. |
-| Playwright and Istanbul | Run the WASM app in headless Chromium and collect coverage for its JavaScript renderer. |
-| LCOV and Coverage Gutters | LCOV's `genhtml` renders the tracefile as HTML; Coverage Gutters displays its line coverage in VS Code. |
-| webfs and media-types | Serve the built application with `sh scripts/dev.sh serve`, including the WebAssembly MIME type. |
-| Live Server | Provide an optional VS Code web server, configured to serve `src/build/release/`. Use it or webfs, not both on port 8080. |
-
+| Tool type | Tools | Purpose |
+| --- | --- | --- |
+| Development environment | Debian dev containers (Docker or Podman) | Provide a consistent development environment. |
+| IDE | VS Code | Editor and entry point for development tasks and browser debugging. |
+| Build system | GNU Make | Defines the build, serve, and test workflows in `src/Makefile`. |
+| Compiler and linker | Clang and LLD | Compile and link the C application into WebAssembly. |
+| Compilation database and language server | Bear and clangd | Bear records build commands in `compile_commands.json`; clangd uses them for editor completion, diagnostics, and navigation. |
+| WebAssembly tooling | WABT | Validates and inspects WebAssembly; `wasm-objdump` also disassembles it. |
+| Browser debugger | VS Code JavaScript debugger | Runs the configured browser debug session. |
+| Native debugger | GDB | Available for native debugging; not wired into the VS Code launch configuration. |
+| Unit and integration testing | C assertions | Verify behavior in the native unit and integration tests. |
+| Browser end-to-end testing | Playwright and Chromium | Run the browser end-to-end test against the Wasm application. |
+| Test framework, mocking, and test discovery | Google Test, Google Mock, and C++ TestMate | Available in the dev containers for C++ testing, mocking, and editor test discovery; not used by the current suite. |
+| Dynamic analysis | Valgrind Memcheck | Checks native execution for memory errors and leaks. |
+| Dynamic analysis | Clang ASan, LeakSanitizer, and UBSan | Instrument the native suite to detect memory errors, leaks on Linux, and undefined behavior. |
+| Static analysis | Clang Static Analyzer, clang-tidy, and cppcheck | Check C source without running it. The project calls the analyzer through `clang --analyze`; the dev containers also provide `scan-build-19`. |
+| Native code coverage | `llvm-profdata` and `llvm-cov` | Merge native coverage profiles, summarize coverage, and export an LCOV tracefile. |
+| JavaScript code coverage | Istanbul | Instruments the browser's JavaScript renderer and exports an LCOV tracefile. |
+| Coverage reporting and visualization | LCOV `genhtml` and Coverage Gutters | Render the combined coverage report as HTML and show coverage in VS Code, respectively. |
+| Formatting and editor conventions | clang-format 19 and EditorConfig | Apply C formatting and editor whitespace conventions, respectively. |
+| Static web server and MIME types | webfs and media-types | Serve the built application with the WebAssembly MIME type. |
+| Static web server | Live Server | Optional VS Code alternative for serving the release build. |
 
 ## Pipeline
 
@@ -275,9 +316,10 @@ MIT License, see `LICENSE` for details.
 | Implement GDB debugging | PARTLY |
 | Implement Code formatter (clang-format, EditorConfig) | DONE |
 | Implement project code coverage (Clang, Istanbul, LCOV, Coverage Gutters) | DONE |
-| Implement Runtime analysis (llvm/clang sanitizers, valgrind) | PARTLY |
-| Implement static analysis (clang static analyzer, clang-tidy, cppcheck) | PARTLY |
-| Implement testing (unit test + mock) (Google Test + Google Mock, C++ TestMate) | PARTLY |
+| Implement native runtime analysis (Valgrind, Clang ASan/UBSan) | DONE |
+| Implement static analysis (Clang Static Analyzer, clang-tidy, cppcheck) | DONE |
+| Implement native C unit and integration tests | DONE |
+| Integrate Google Test, Google Mock, and C++ TestMate | NOT STARTED |
 | Implement project specific stuff (live server, plus what else?) | PARTLY |
 | List up all project specific stuff (e.g. live server, webfs and media-types, bear and clangd, WABT, ...?) | PARTLY |
 | Map out options for pipelines, and Implement pipeline that does all the testing as well! (Github action? Azure DevOps Pipeline?)| |
