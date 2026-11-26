@@ -12,7 +12,9 @@ usage() {
 Usage: sh scripts/dev.sh {build|rebuild|serve} [release|debug]
        sh scripts/dev.sh test native [valgrind|sanitize]
        sh scripts/dev.sh test browser
-       sh scripts/dev.sh {prepare|coverage|analyze|clean|stop|compdb|help}
+       sh scripts/dev.sh analyze [clang|clang-tidy|cppcheck]...
+       sh scripts/dev.sh {prepare|coverage|clean|stop|compdb|help}
+       sh scripts/dev.sh {validate|inspect}
        sh scripts/dev.sh {format|format-check}
 
 Commands:
@@ -24,11 +26,13 @@ Commands:
     test native sanitize  Run the native C tests with Clang ASan and UBSan.
     test browser          Run the Chromium test against the release build.
     coverage Run native and browser tests and generate LCOV and HTML reports.
-    analyze  Run Clang Static Analyzer, clang-tidy, and cppcheck.
+    analyze [tool...]  Run all static analyzers by default, or just the named tools.
     clean    Remove all build outputs.
     serve    Build and serve the selected mode (release by default; Ctrl+C to stop).
     stop     Stop the server using the Makefile's stop target.
     compdb   Regenerate compile_commands.json through a forced release build.
+    validate Validate the release WebAssembly module with WABT.
+    inspect  Show the release WebAssembly module's section details with WABT.
     format   Format tracked C sources and headers in place.
     format-check  Fail if tracked C sources or headers need formatting.
     help     Show this help.
@@ -40,8 +44,27 @@ EOF
 
 # Main script entry point.
 case "${1:-help}" in
-    prepare|compdb|coverage|analyze)
+    prepare|compdb|coverage|validate|inspect)
         exec make -C "$root/src" "$1"
+        ;;
+    analyze)
+        shift
+        if [ "$#" -eq 0 ]; then
+            exec make -C "$root/src" analyze
+        fi
+        # Replace each selector with its Make target, preserving argument boundaries.
+        for tool do
+            case "$tool" in
+                clang|clang-tidy|cppcheck) ;;
+                *)
+                    printf 'Unknown analyzer: %s. Expected clang, clang-tidy, or cppcheck.\n' "$tool" >&2
+                    exit 2
+                    ;;
+            esac
+            shift
+            set -- "$@" "analyze-$tool"
+        done
+        exec make -C "$root/src" "$@"
         ;;
     test)
         shift

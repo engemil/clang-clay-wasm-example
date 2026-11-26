@@ -127,7 +127,7 @@
             }
         },
         {
-            "label": "Run (Serve)",
+            "label": "Run (Serve) (Release)",
             "type": "process",
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/dev.sh", "serve"],
@@ -183,7 +183,7 @@
             "problemMatcher": []
         },
         {
-            "label": "Coverage (Project)",
+            "label": "Code Coverage",
             "type": "process",
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/dev.sh", "coverage"],
@@ -191,10 +191,31 @@
             "problemMatcher": []
         },
         {
-            "label": "Analyze (Static)",
+            "label": "Analyze (clang-tidy, Clang Static Analyzer, cppcheck)",
             "type": "process",
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/dev.sh", "analyze"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Analyze (Clang Static Analyzer)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "analyze", "clang"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Analyze (clang-tidy)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "analyze", "clang-tidy"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Analyze (cppcheck)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "analyze", "cppcheck"],
             "problemMatcher": []
         },
         {
@@ -204,7 +225,8 @@
             "problemMatcher": []
         },
         {
-            "label": "Serve (Debug)",
+            "label": "Run (Serve) (Debug)",
+            "detail": "Build and serve the debug WebAssembly app without launching the debugger.",
             "type": "process",
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/dev.sh", "serve", "debug"],
@@ -234,10 +256,55 @@
             }
         },
         {
+            "label": "Stop (Serve)",
+            "detail": "Stop webfsd started by the standalone serve command; use Stop (Debug) for the supervised debug task.",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "stop"],
+            "problemMatcher": []
+        },
+        {
             "label": "Stop (Debug)",
             "type": "process",
             "command": "sh",
             "args": ["${workspaceFolder}/scripts/wait-for-webfsd.sh", "stop"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Format (formats C files)",
+            "detail": "Rewrite tracked C sources and headers in place.",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "format"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Format (Checks C files)",
+            "detail": "Check tracked C sources and headers without editing them.",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "format-check"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Validate WebAssembly",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "validate"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Inspect WebAssembly",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "inspect"],
+            "problemMatcher": []
+        },
+        {
+            "label": "Prepare (dependencies and compilation database)",
+            "type": "process",
+            "command": "sh",
+            "args": ["${workspaceFolder}/scripts/dev.sh", "prepare"],
             "problemMatcher": []
         },
         {

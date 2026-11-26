@@ -47,7 +47,7 @@ LLVM_COV       ?= $(shell $(CC) -print-prog-name=llvm-cov)
 WASM_SOURCES  := main.c counter.c
 WASM_HEADERS  := clay/clay.h counter.h frame.h
 NATIVE_TOOLCHAIN := $(TEST_BUILD)/toolchain
-TEST_SOURCES  := ../tests/shared/native_tests.c ../tests/unit/counter_test.c \
+TEST_SOURCES  := ../tests/native_main.c ../tests/unit/counter_test.c \
                  ../tests/integration/frame_test.c
 TEST_OBJECTS  := $(patsubst ../tests/%.c,$(TEST_BUILD)/%.o,$(TEST_SOURCES))
 COVERAGE_OBJECTS := $(WASM_SOURCES:%.c=$(COVERAGE_BUILD)/%.o)
