@@ -40,7 +40,10 @@ jobs:
           persist-credentials: false
 
       - name: Check C formatting
-        run: sh scripts/dev.sh format-check
+        # Checkout trusts the workspace only in its temporary Git config.
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          sh scripts/dev.sh format-check
 
       - name: Run all C static analyzers
         run: make -k -C src analyze

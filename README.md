@@ -332,7 +332,7 @@ These are equivalent ways to run the same workflows.
 
 ## Development Tools Overview
 
-This table covers the tools and libraries used by the project's development workflows, plus optional development tools provided by the dev containers. The setup instructions and Dockerfiles list the supporting system packages.
+This table covers the tools and libraries used by the project's development workflows, plus optional development tools provided by the dev containers. The setup instructions and Dockerfiles list the supporting system packages. Rows marked **(Optional)** list tools that are available but not used by the project's standard workflows.
 
 | Tool type | Tools | Purpose |
 | --- | --- | --- |
@@ -349,17 +349,19 @@ This table covers the tools and libraries used by the project's development work
 | Unit and integration testing | C `assert` | Checks counter behavior and its integration with the Clay frame code. |
 | JavaScript test tooling | Node.js 20+ and npm | Run the browser test and coverage scripts and install their locked dependencies. |
 | Browser end-to-end testing | Playwright and Chromium | Run the browser end-to-end test against the Wasm application. |
-| Optional C++ test tooling | Google Test, Google Mock, and C++ TestMate | Available in the dev containers for projects that need a C++ test framework, interaction verification with mocks, or editor test discovery. The current suite uses none of these. |
+| (Optional) C++ test tooling | Google Test, Google Mock, and C++ TestMate | Available in the dev containers for C++ tests, mocks, and editor test discovery. The current suite uses none of these. |
 | Dynamic analysis | Valgrind Memcheck | Checks native execution for memory errors and leaks. |
 | Dynamic analysis | Clang ASan, LeakSanitizer, UBSan, and `llvm-symbolizer` | Detect memory errors, leaks on Linux, and undefined behavior in native tests; resolve stack traces to source locations. |
-| Static analysis | Clang Static Analyzer, clang-tidy, and cppcheck | Check C source without running it. The project calls the analyzer through `clang --analyze`; the dev containers also provide `scan-build-19`. |
+| Static analysis | Clang Static Analyzer, clang-tidy, and cppcheck | Check C source without running it. The project calls the analyzer through `clang --analyze`. |
+| (Optional) Static analysis driver | `scan-build-19` | Available in the dev containers but not called by the project's analyzer targets. |
 | Native code coverage | `llvm-profdata` and `llvm-cov` | Merge native coverage profiles, summarize coverage, and export an LCOV tracefile. |
 | JavaScript code coverage | Istanbul | Instruments the browser's JavaScript renderer and exports an LCOV tracefile. |
 | Coverage reporting and visualization | LCOV `genhtml` and Coverage Gutters | Render the combined coverage report as HTML and show coverage in VS Code, respectively. |
 | Formatting and editor conventions | clang-format 19 and EditorConfig | Apply C formatting and editor whitespace conventions, respectively. |
+| (Optional) EditorConfig CLI | `editorconfig` | Reports the resolved EditorConfig rules for a path; does not lint or format files. |
 | Static web server and MIME types | `webfsd` (webfs package) and media-types | Serve the built application with the WebAssembly MIME type. |
 | Debug server readiness | curl and `flock` (util-linux) | Check that the supervised server serves the debug build and coordinate its start and stop. |
-| Static web server | Live Server | Optional VS Code alternative for serving the release build. |
+| (Optional) Static web server | Live Server | VS Code alternative for serving the release build manually. |
 
 ## Pipeline
 
