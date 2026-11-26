@@ -16,11 +16,7 @@
                 "ryanluker.vscode-coverage-gutters",
                 "ritwickdey.liveserver",
                 "ms-vscode.wasm-dwarf-debugging"
-            ],
-            "settings": {
-                "liveServer.settings.port": 8080,
-                "liveServer.settings.root": "/src/build/release"
-            }
+            ]
         }
     }
 }

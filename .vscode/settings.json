@@ -1,7 +1,6 @@
 {
+    // C/C++, IntelliSense engine, Clangd settings
     "clangd.path": "/usr/bin/clangd-19",
-    "coverage-gutters.coverageBaseDir": "src/build/coverage",
-    "coverage-gutters.showLineCoverage": true,
     "[c]": {
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
         "editor.formatOnSave": true
@@ -10,5 +9,11 @@
         "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
         "editor.formatOnSave": true
     },
-    "C_Cpp.intelliSenseEngine": "disabled"
+    "C_Cpp.intelliSenseEngine": "disabled",
+    // Coverage Gutters settings
+    "coverage-gutters.coverageBaseDir": "src/build/coverage",
+    "coverage-gutters.showLineCoverage": true,
+    // Live Server settings
+    "liveServer.settings.port": 8080,
+    "liveServer.settings.root": "/src/build/release"
 }

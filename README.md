@@ -116,7 +116,7 @@ For instruction-level disassembly:
 wasm-objdump -d src/build/release/index.wasm
 ```
 
-### Serve (run) the application
+### Run (serve) the application
 
 (Build and) serve the selected mode with webfsd:
 
@@ -131,9 +131,18 @@ The server stays in the foreground; use **Ctrl+C** to stop it before switching m
 
 In VS Code, choose **Tasks: Run Task** → **Serve (Debug)** to build and serve the debug app without launching the debugger. Use **Stop (Debug)** to stop it.
 
-(TODO: Test Live Server!)
+#### Alternative, run (serve) with Live Server (VS Code extension)
 
-The optional **Live Server** extension is a separate server for `src/build/release/`, not a caller of `dev.sh`. Use it or the script's webfsd server, not both on port 8080.
+**Live Server** (VS Code extension) serves the release build and reloads the page automatically when the served files change. It does not build the app.
+
+1. In VS Code make sure you have the repository opened in its root folder.
+2. Stop any running local server first, that uses port 8080. 
+3. Build the release app with **Build (Release)**.
+4. Run **Live Server: Open with Live Server** from the Command Palette, or click **Go Live** in the status bar.
+    - If a browser doesn't open, visit `http://127.0.0.1:8080/`
+5. After editing the C or web source, run the release build again to update the files that Live Server watches.
+6. To stop serving, run **Live Server: Stop Live Server** or click the port indicator in the status bar.
+
 
 ## Stop & Clean
 
