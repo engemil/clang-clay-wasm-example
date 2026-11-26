@@ -1,6 +1,6 @@
-# example_project
+# clang-clay-wasm-example
 
-Example project, as a template for C17 projects that target the browser. The example is a click counter built with Clay. Clang and LLD compile and link it to freestanding WebAssembly without Emscripten or a C standard library. Javascript renders the UI in the browser.
+A C17 template for the browser. Clang and LLD build freestanding WebAssembly without Emscripten or a C standard library. The example is a click counter: Clay computes the layout, and JavaScript renders it in the browser.
 
 The template includes native C tests, a Chromium end-to-end test, formatting, static and dynamic analysis, and code coverage. Develop on Linux locally or in a Docker or Podman dev container. Use GNU Make directly, run `sh scripts/dev.sh`, or use the configured VS Code tasks.
 
@@ -332,53 +332,81 @@ These are equivalent ways to run the same workflows.
 
 ## Development Tools Overview
 
+This table covers the tools and libraries used by the project's development workflows, plus optional development tools provided by the dev containers. The setup instructions and Dockerfiles list the supporting system packages.
+
 | Tool type | Tools | Purpose |
 | --- | --- | --- |
 | Development environment | Debian dev containers (Docker or Podman) | Provide a consistent development environment. |
-| IDE | VS Code | Editor and entry point for development tasks and browser debugging. |
-| Build system | GNU Make | Defines the build, serve, and test workflows in `src/Makefile`. |
-| Compiler and linker | Clang and LLD | Compile and link the C application into WebAssembly. |
-| Compilation database and language server | Bear and clangd | Bear records build commands in `compile_commands.json`; clangd uses them for editor completion, diagnostics, and navigation. |
-| WebAssembly tooling | WABT | Validates and inspects WebAssembly; `wasm-objdump` also disassembles it. |
-| Browser debugger | VS Code JavaScript debugger | Runs the configured browser debug session. |
+| IDE/Editor and container integration | VS Code and Dev Containers | Run development tasks and debuggers locally or in a dev container. |
+| Version control | Git | Manages the Clay submodule and identifies tracked C files for formatting. |
+| Build system and workflow entry points | GNU Make and `scripts/dev.sh` (POSIX shell) | The Makefile defines build, serve, and test workflows; the script provides a common entry point for the terminal and VS Code. |
+| Compiler and linker | Clang and LLD (`wasm-ld`) | Clang compiles the native tests; Clang and LLD build the freestanding Wasm app. |
+| UI layout | Clay | Computes the app's layout and render commands; pinned as a Git submodule. |
+| Compilation database and language server | Bear and clangd 19 | Bear records build commands in `compile_commands.json`; clangd uses them for editor completion, diagnostics, and navigation. |
+| WebAssembly tooling | WABT (`wasm-validate`, `wasm-objdump`) | Validates, inspects, and disassembles the Wasm binary. |
+| Browser debugging | VS Code JavaScript Debugger, WebAssembly DWARF Debugging extension, and Chromium | Debug JavaScript and step through the original C source in the Wasm debug build. |
 | Native debugger | GDB and the VS Code C/C++ debug adapter | Debug the native test executable, including the production C code it calls. |
-| Unit and integration testing | C assertions | Verify behavior in the native unit and integration tests. |
+| Unit and integration testing | C `assert` | Checks counter behavior and its integration with the Clay frame code. |
+| JavaScript test tooling | Node.js 20+ and npm | Run the browser test and coverage scripts and install their locked dependencies. |
 | Browser end-to-end testing | Playwright and Chromium | Run the browser end-to-end test against the Wasm application. |
 | Optional C++ test tooling | Google Test, Google Mock, and C++ TestMate | Available in the dev containers for projects that need a C++ test framework, interaction verification with mocks, or editor test discovery. The current suite uses none of these. |
 | Dynamic analysis | Valgrind Memcheck | Checks native execution for memory errors and leaks. |
-| Dynamic analysis | Clang ASan, LeakSanitizer, and UBSan | Instrument the native suite to detect memory errors, leaks on Linux, and undefined behavior. |
+| Dynamic analysis | Clang ASan, LeakSanitizer, UBSan, and `llvm-symbolizer` | Detect memory errors, leaks on Linux, and undefined behavior in native tests; resolve stack traces to source locations. |
 | Static analysis | Clang Static Analyzer, clang-tidy, and cppcheck | Check C source without running it. The project calls the analyzer through `clang --analyze`; the dev containers also provide `scan-build-19`. |
 | Native code coverage | `llvm-profdata` and `llvm-cov` | Merge native coverage profiles, summarize coverage, and export an LCOV tracefile. |
 | JavaScript code coverage | Istanbul | Instruments the browser's JavaScript renderer and exports an LCOV tracefile. |
 | Coverage reporting and visualization | LCOV `genhtml` and Coverage Gutters | Render the combined coverage report as HTML and show coverage in VS Code, respectively. |
 | Formatting and editor conventions | clang-format 19 and EditorConfig | Apply C formatting and editor whitespace conventions, respectively. |
-| Static web server and MIME types | webfs and media-types | Serve the built application with the WebAssembly MIME type. |
+| Static web server and MIME types | `webfsd` (webfs package) and media-types | Serve the built application with the WebAssembly MIME type. |
+| Debug server readiness | curl and `flock` (util-linux) | Check that the supervised server serves the debug build and coordinate its start and stop. |
 | Static web server | Live Server | Optional VS Code alternative for serving the release build. |
 
 ## Pipeline
 
-(TODO: Setup a pipeline with github actions or something similar? to have a working pipeline do all the testings)
+The [GitHub Actions workflow](.github/workflows/ci.yml) uses the same Debian base as the dev containers. It reuses the Makefile and `scripts/dev.sh` commands described above, so the checks can also run locally.
+
+The `Verify` job runs these stages in order and skips later steps after a failure.
+
+```mermaid
+flowchart LR
+    trigger["PR or push to main<br/>or manual run"] --> setup["Install tools<br/>Check out code and Clay"]
+    setup --> checks["C checks<br/>Format, analyze, test"]
+    checks --> wasm["Wasm<br/>Build and validate"]
+    wasm --> browser["Chromium<br/>Install and test"]
+    browser --> coverage["Coverage<br/>Generate and upload"]
+```
+
+CI does not release, deploy, or publish the application. To gate merges on CI, require the `Verify` check in the branch rules for `main` after the first hosted run.
+
+### Find results on GitHub
+
+1. In the repository, open **Actions → CI** and select the run for the commit or pull request you want to inspect. From a pull request, you can also open **Checks** and select **Verify**.
+2. On the run page, open **Jobs → Verify** and expand the relevant step. Formatting, analyzer, and Wasm diagnostics are in their respective step logs. **Run native unit and integration tests** includes normal test output, Valgrind, and sanitizer diagnostics. **Run Chromium end-to-end test** shows browser test output. There is no separate test report. To save the logs, use the gear menu above the log and select **Download log archive**.
+3. **Generate native and browser coverage** prints the line and branch totals. For the detailed report, return to the run **Summary** and download **Artifacts → coverage**. Extract the ZIP and open `html/index.html` in a browser, or import `lcov.info` into a coverage tool. The artifact is retained for 14 days and is only available if the upload step succeeded. There is no coverage threshold.
+
+### Find results from the terminal
+
+Install the [GitHub CLI (`gh`)](https://cli.github.com/). In a terminal, change into the repository folder (the one containing this README). If you haven't signed in to `gh` yet, run `gh auth login`.
+
+List recent runs of the `CI` workflow:
+
+```sh
+gh run list --workflow CI
+```
+
+Find the row for the run you want and copy the number in its `ID` column. In the example below, replace `1234567890` with that number. Run the log or download command you need:
+
+```sh
+run_id=1234567890
+gh run view "$run_id" --log           # Full log
+gh run view "$run_id" --log-failed    # Failed steps only
+gh run download "$run_id" --name coverage --dir ./coverage-report
+```
+
+After downloading coverage, open `coverage-report/html/index.html` in your browser.
 
 
 ## License
 
 MIT License, see `LICENSE` for details.
-
-
-## PLAN (TODOs)
-
-| Task | Status |
-| --- | --- |
-| Implement clang | DONE |
-| Add VS Code debugging for the native C tests with GDB | DONE |
-| Implement Code formatter (clang-format, EditorConfig) | DONE |
-| Implement project code coverage (Clang, Istanbul, LCOV, Coverage Gutters) | DONE |
-| Implement native dynamic analysis (Valgrind, Clang ASan/UBSan) | DONE |
-| Implement static analysis (Clang Static Analyzer, clang-tidy, cppcheck) | DONE |
-| Implement native C unit and integration tests | DONE |
-| Implement project specific stuff (live server, plus what else?) | PARTLY |
-| List up all project specific stuff (e.g. live server, webfs and media-types, bear and clangd, WABT, ...?) | PARTLY |
-| Map out options for pipelines, and Implement pipeline that does all the testing as well! (Github action? Azure DevOps Pipeline?)| |
-
-
 

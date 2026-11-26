@@ -1,4 +1,4 @@
-# pure_c_example_project — Clay web UI, compiled to freestanding wasm32.
+# clang-clay-wasm-example — Clay web UI, compiled to freestanding wasm32.
 #
 #   make release build optimized WebAssembly in build/release/ (default)
 #   make debug   build unoptimized WebAssembly with debug info in build/debug/

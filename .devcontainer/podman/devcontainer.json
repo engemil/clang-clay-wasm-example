@@ -1,5 +1,5 @@
 {
-    "name": "example_devcontainer_podman",
+    "name": "Clang Clay Wasm Example (Podman)",
     "dockerComposeFile": "docker-compose.yml",
     "service": "example_service",
     "shutdownAction": "none",

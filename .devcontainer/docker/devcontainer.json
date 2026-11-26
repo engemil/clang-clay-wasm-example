@@ -1,5 +1,5 @@
 {
-    "name": "example_devcontainer_docker",
+    "name": "Clang Clay Wasm Example (Docker)",
     "dockerComposeFile": "docker-compose.yml",
     "service": "example_service",
     "shutdownAction": "none",

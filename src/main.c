@@ -1,4 +1,4 @@
-// pure_c_example_project — web UI in C with Clay (submodule at src/clay, pinned to v0.14).
+// clang-clay-wasm-example — C web UI with Clay (src/clay, pinned to v0.14).
 //
 // Built freestanding: clang --target=wasm32 -nostdlib. There is no libc, so the
 // click counter formats its own decimal string.
@@ -70,7 +70,7 @@ void UpdateDrawFrame(uintptr_t scratch[3], float width, float height, float mous
                 .childGap = 12,
             },
     }) {
-        CLAY_TEXT(CLAY_STRING("Example Project"),
+        CLAY_TEXT(CLAY_STRING("Clang Clay Wasm Example"),
                   CLAY_TEXT_CONFIG({.fontSize = 36, .textColor = COLOR_TEXT}));
         CLAY_TEXT(CLAY_STRING("\"Click me\" counter"),
                   CLAY_TEXT_CONFIG({.fontSize = 24, .textColor = COLOR_TEXT}));
