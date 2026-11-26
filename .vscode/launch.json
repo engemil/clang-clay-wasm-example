@@ -2,7 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug WebAssembly (Chrome)",
+            "name": "Debug Native Tests (GDB)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/build/test/native_tests",
+            "cwd": "${workspaceFolder}/src",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "preLaunchTask": "Build (Native Tests)"
+        },
+        {
+            "name": "Debug WebAssembly (Chromium)",
             "type": "chrome",
             "request": "launch",
             "preLaunchTask": "Prepare WebAssembly Debug",

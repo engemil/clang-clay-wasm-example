@@ -148,6 +148,13 @@
             }
         },
         {
+            "label": "Build (Native Tests)",
+            "type": "process",
+            "command": "make",
+            "args": ["-C", "${workspaceFolder}/src", "build/test/native_tests"],
+            "problemMatcher": []
+        },
+        {
             "label": "Test (Native)",
             "type": "process",
             "command": "sh",
@@ -221,7 +228,7 @@
         {
             "label": "Prepare WebAssembly Debug",
             "dependsOrder": "sequence",
-            "dependsOn": ["Rebuild (Debug)", "Serve (Debug)"],
+            "dependsOn": ["Rebuild (Debug)", "Run (Serve) (Debug)"],
             "problemMatcher": []
         },
         {

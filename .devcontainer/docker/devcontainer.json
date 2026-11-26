@@ -10,6 +10,7 @@
         "vscode": {
             "extensions": [
                 "TestMate.vscode-catch2-test-adapter",
+                "ms-vscode.cpptools",
                 "llvm-vs-code-extensions.vscode-clangd",
                 "EditorConfig.EditorConfig",
                 "ryanluker.vscode-coverage-gutters",

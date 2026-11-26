@@ -24,7 +24,7 @@ The template includes native C tests, a Chromium end-to-end test, formatting, st
         - Dev Containers `https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers`
             - NB! Make sure Dev containers plugin is pointing to Podman, if you are not using Docker. Check `$HOME/.config/Code/User/settings.json` (for Linux).
         - These already included inside the dev container:
-            <!-- - C/C++ `https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools` -->
+            - C/C++ (GDB debug adapter) `https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools`
             - clangd `https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd`
             - EditorConfig `https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig`
             - C++ TestMate `https://marketplace.visualstudio.com/items?itemName=TestMate.vscode-catch2-test-adapter`
@@ -129,7 +129,7 @@ Then open a web browser and check `http://127.0.0.1:8080/`
 
 The server stays in the foreground; use **Ctrl+C** to stop it before switching modes.
 
-In VS Code, choose **Tasks: Run Task** → **Serve (Debug)** to build and serve the debug app without launching the debugger. Use **Stop (Debug)** to stop it.
+In VS Code, choose **Tasks: Run Task** → **Run (Serve) (Debug)** to build and serve the debug app without launching the debugger. Use **Stop (Debug)** to stop it.
 
 #### Alternative, run (serve) with Live Server (VS Code extension)
 
@@ -151,20 +151,32 @@ To stop the standalone server, use **Tasks: Run Task** → **Stop (Serve)** or r
 sh scripts/dev.sh stop
 ```
 
-Prefer **Ctrl+C** in the serving terminal if other `webfsd` instances are running: when no valid PID file is found, the stop command falls back to scanning for `webfsd` processes. For the **Serve (Debug)** task, use **Stop (Debug)**.
+Prefer **Ctrl+C** in the serving terminal if other `webfsd` instances are running: when no valid PID file is found, the stop command falls back to scanning for `webfsd` processes. For the **Run (Serve) (Debug)** task, use **Stop (Debug)**.
 
 Clean build artifacts:
 ```sh
 sh scripts/dev.sh clean
 ```
 
+
 ## Debug (in VS Code)
+
+### Debug the native C tests and code they call
+
+In **Run and Debug**, select **Debug Native Tests (GDB)** and press **F5**. The **Build (Native Tests)** task builds `src/build/test/native_tests` with debug symbols without running it first. GDB then launches it.
+
+You can set breakpoints in `tests/unit/counter_test.c` and `src/counter.c` to step through the test and the production code it calls.
+
+No web server or browser is needed. The dev containers include GDB and the C/C++ (debug adapter) (clangd remains the editor's language server).
+
+
+### Debug the browser app
 
 > Before continuing make sure to have nothing running or stop anything using port 8080
 
-In **Run and Debug**, select **Debug WebAssembly (Chrome)** and press **F5**
+In **Run and Debug**, select **Debug WebAssembly (Chromium)** and press **F5**
 
-You will have a debug session with Chrome/Chromium.
+You will have a debug session with Chromium. To see more debug information, in Chromium press **Ctrl+Shift+I**. You set breakpoints as usual in VS Code.
 
 
 ## Testing and code quality
@@ -302,6 +314,7 @@ These are equivalent ways to run the same workflows.
 | Build and serve release | **Tasks: Run Task** → **Run (Serve) (Release)** | `sh scripts/dev.sh serve release` | `make -C src serve MODE=release` (also `make -C src serve`) |
 | Build and serve debug | **Tasks: Run Task** → **Run (Serve) (Debug)** | `sh scripts/dev.sh serve debug` | `make -C src serve MODE=debug` |
 | Stop the standalone server | **Tasks: Run Task** → **Stop (Serve)** | `sh scripts/dev.sh stop` | `make -C src stop` |
+| Build native tests without running them | **Tasks: Run Task** → **Build (Native Tests)** | — | `make -C src build/test/native_tests` |
 | Run native tests | **Tasks: Run Test Task** → **Test (Native)** | `sh scripts/dev.sh test native` | `make -C src test-native` |
 | Run native tests under Memcheck | **Tasks: Run Task** → **Test (Native: Valgrind)** | `sh scripts/dev.sh test native valgrind` | `make -C src test-native-valgrind` |
 | Run native tests with Clang sanitizers | **Tasks: Run Task** → **Test (Native: Sanitizers)** | `sh scripts/dev.sh test native sanitize` | `make -C src test-native-sanitize` |
@@ -328,7 +341,7 @@ These are equivalent ways to run the same workflows.
 | Compilation database and language server | Bear and clangd | Bear records build commands in `compile_commands.json`; clangd uses them for editor completion, diagnostics, and navigation. |
 | WebAssembly tooling | WABT | Validates and inspects WebAssembly; `wasm-objdump` also disassembles it. |
 | Browser debugger | VS Code JavaScript debugger | Runs the configured browser debug session. |
-| Native debugger | GDB | Available for native debugging; not wired into the VS Code launch configuration. |
+| Native debugger | GDB and the VS Code C/C++ debug adapter | Debug the native test executable, including the production C code it calls. |
 | Unit and integration testing | C assertions | Verify behavior in the native unit and integration tests. |
 | Browser end-to-end testing | Playwright and Chromium | Run the browser end-to-end test against the Wasm application. |
 | Optional C++ test tooling | Google Test, Google Mock, and C++ TestMate | Available in the dev containers for projects that need a C++ test framework, interaction verification with mocks, or editor test discovery. The current suite uses none of these. |
@@ -357,7 +370,7 @@ MIT License, see `LICENSE` for details.
 | Task | Status |
 | --- | --- |
 | Implement clang | DONE |
-| Implement GDB debugging | PARTLY |
+| Add VS Code debugging for the native C tests with GDB | DONE |
 | Implement Code formatter (clang-format, EditorConfig) | DONE |
 | Implement project code coverage (Clang, Istanbul, LCOV, Coverage Gutters) | DONE |
 | Implement native dynamic analysis (Valgrind, Clang ASan/UBSan) | DONE |
